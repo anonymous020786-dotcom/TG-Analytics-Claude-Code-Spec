@@ -20,12 +20,14 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | D-012 | ADR-007 accepted: admin UI hosted in `apps/web` under `/admin` initially (was OD-013). | 2026-09-29 | `apps/admin` stays a placeholder. |
 | D-013 | PHASE-04 creates only tables whose columns the spec defines now: catalog (channels, channel_aliases, categories, channel_categories, posts, post_media), job ledger (jobs, job_attempts, dead_letter_jobs) and administration (audit_logs, system_settings, feature_flags). User, auth, tracking, API-key, billing and bot tables are created by their own phases (16, 17, 19, 20, 21, 23, 24, 25) with their own migrations. | 2026-09-29 | Avoids inventing columns; ADR-010. |
 | D-014 | Analytical storage starts on PostgreSQL behind the `AnalyticsStore` interface; ClickHouse only when measurements justify it. `ranking_snapshots` and `analytics_events` are created in PHASE-11, which produces them. | 2026-09-29 | ADR-011. |
+| D-015 | This product uses its own dedicated Telegram credentials (bot token, `api_id`/`api_hash`, MTProto account), never shared with other projects. | 2026-09-29 | Spike evidence: a shared token hit `429` on its first call; ToS 2.1 requires an own `api_id`. CAPABILITY-MATRIX §3–4. |
+| D-016 | Collected Telegram data is never used to train, fine-tune or develop AI/ML models (API ToS 1.5). | 2026-09-29 | Added to PRD §7 non-goals. |
 
 ## Open
 
 | ID | Question | Needed by | Current default / impact |
 |---|---|---|---|
-| OD-003 | MTProto accounts: who owns them, how many, dedicated numbers, rotation/ban recovery? | PHASE-06 | Required before any MTProto collector runs. |
+| OD-003 | MTProto account plan: a dedicated account owned by the operator (phone number), a dedicated `api_id`/`api_hash` registered for this app (D-015), how a session is created and stored (secret), how many accounts, ban recovery. PHASE-05A confirmed post history and views are MTProto-only and **user-only** (CAPABILITY-MATRIX §1). | PHASE-06 (build against fixtures); live MTProto verification and any MTProto collector (PHASE-08) | Blocks post analytics and verified/scam flags. Bot API covers discovery, metadata and member counts. |
 | OD-004 | Production data policy: jurisdiction and lawful basis; channel post text retention period; audit-log and deleted-account retention; removal/opt-out semantics vs append-only history; privacy policy/terms. | PHASE-07 (collection of real data), PHASE-31 (production) | D-006 defaults apply until resolved. |
 | OD-005 | Numeric NFR targets: latency p95, max page size, scale (entities, ingest rate), refresh intervals, availability SLO, RPO/RTO, ASVS level, WCAG level, alert thresholds. | Before each verifying phase (REQUIREMENTS §3) | Marked TBD (D-007). |
 | OD-006 | Plans/tiers and their limits (watchlist size, alert count, history depth, API quota, exports). | PHASE-24 | Personas only name Free/Registered, Pro/business, API. |

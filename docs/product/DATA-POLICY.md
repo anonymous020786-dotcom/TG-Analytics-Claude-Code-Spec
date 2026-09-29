@@ -18,7 +18,7 @@ Status: PHASE-00 accepted baseline. Rules marked **Default** are accepted for de
 | Telegram Bot API | Bot user interaction (FR-BOT-*); public entity lookups where the Bot API supports them. | Bot token from BotFather held in a secret store; honor Bot API rate limits. |
 | MTProto client API | Reading public channel/group metadata, counts and public message history not available via the Bot API. | Requires `api_id`/`api_hash` issued by Telegram and one or more logged-in accounts; must comply with Telegram API Terms of Service; honor `FLOOD_WAIT`; never join or read private entities; session files are secrets. |
 
-Exact per-interface capabilities (which fields/methods are available for public entities) are **not asserted here**. They must be verified against official Telegram documentation and recorded in PHASE-06 before any collector relies on them. Browser/HTML scraping is not a primary source (CLAUDE.md).
+Per-interface capabilities are recorded, with evidence levels, in `docs/telegram/CAPABILITY-MATRIX.md` (PHASE-05A). Collectors may rely only on capabilities marked Verified there. Collected data is never used for AI/ML training (API ToS 1.5, D-016). Browser/HTML scraping is not a primary source (CLAUDE.md).
 
 MTProto account ownership, count and operational safety are open (OD-003).
 
