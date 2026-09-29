@@ -29,3 +29,13 @@ docker compose up --build   # api on 127.0.0.1:3001, web on 127.0.0.1:3000
 ```
 
 Tooling decisions: `docs/adr/ADR-008-workspace-tooling.md`. Import rules: `scripts/boundaries.rules.mjs` (mirrors `docs/architecture/SERVICE-BOUNDARIES.md` §4).
+
+### Vertical slice (local)
+
+```sh
+pnpm --filter @tga/worker-discovery discover:local https://t.me/<public_channel> --actor <you>
+pnpm --filter @tga/worker-scheduler flags:local set slice.channel-page on --actor <you>
+docker compose up --build        # then open http://127.0.0.1:3000/channel/<username>
+```
+
+Run the discovery, metadata and metrics workers (`start:local`) to collect data. Details: `docs/phases/PHASE-11A-ACCEPTANCE.md`.

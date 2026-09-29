@@ -41,6 +41,11 @@ services:
     environment:
       APP_ENV: local
       LOG_LEVEL: info
+      # Container network: the database host is the postgres service.
+      DATABASE_URL: postgresql://tga:${POSTGRES_PASSWORD:-}@postgres:5432/tga
+    depends_on:
+      postgres:
+        condition: service_healthy
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
@@ -51,6 +56,11 @@ services:
     ports: ["127.0.0.1:3000:3000"]
     read_only: true
     tmpfs: ["/app/apps/web/.next/cache"]
+    environment:
+      API_INTERNAL_URL: http://api:3001
+    depends_on:
+      api:
+        condition: service_healthy
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     restart: unless-stopped

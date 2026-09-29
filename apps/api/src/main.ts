@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { ConfigError, redactConfig } from '@tga/config';
+import { AnomalyRepository, ChannelRepository, createDatabase, FeatureFlagRepository, PostgresAnalyticsStore } from '@tga/database';
 import { createLogger } from '@tga/logging';
+import { ChannelReader } from './channels/channel-reader';
 import { createApp } from './app';
 import { apiConfigSpec, loadApiConfig, type ApiConfig } from './config';
 import { NestLogger } from './logger';
@@ -18,7 +20,15 @@ function loadOrExit(): ApiConfig {
 async function bootstrap(): Promise<void> {
   const config = loadOrExit();
   const logger = createLogger({ name: 'api', level: config.LOG_LEVEL });
-  const app = await createApp(new NestLogger(logger));
+  const db = createDatabase({ url: config.DATABASE_URL });
+  const channelReader = new ChannelReader({
+    channels: new ChannelRepository(db),
+    flags: new FeatureFlagRepository(db),
+    store: new PostgresAnalyticsStore(db),
+    anomalies: new AnomalyRepository(db),
+    intervals: { metricsMs: config.METRICS_REFRESH_MINUTES * 60_000, metadataMs: config.METADATA_REFRESH_MINUTES * 60_000 },
+  });
+  const app = await createApp({ logger: new NestLogger(logger), channelReader });
   await app.listen(config.PORT, '0.0.0.0');
   logger.info({ config: redactConfig(apiConfigSpec, config) }, 'api listening');
 }
