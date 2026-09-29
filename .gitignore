@@ -19,3 +19,7 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+
+# Next.js / TypeScript generated
+next-env.d.ts
+*.tsbuildinfo
