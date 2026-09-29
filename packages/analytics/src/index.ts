@@ -16,3 +16,15 @@ export {
   type FreshnessState,
   type PlausibilityResult,
 } from './quality';
+export { GROWTH_METHODOLOGY_VERSION, GROWTH_WINDOWS, growth, type Growth, type GrowthOptions, type GrowthWindow, type Point } from './growth';
+export { METRIC_REGISTRY, metricDefinition, type MetricDefinition } from './registry';
+export {
+  rank,
+  RANKINGS,
+  TRENDING_V1,
+  trendingScoreV1,
+  type RankedEntry,
+  type RankingCandidate,
+  type RankingDefinition,
+  type RankingResult,
+} from './ranking';

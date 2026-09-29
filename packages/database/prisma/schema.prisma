@@ -56,6 +56,7 @@ model Channel {
   posts           Post[]
   metricSnapshots ChannelMetricSnapshot[]
   anomalies       MetricAnomaly[]
+  rankings        RankingSnapshot[]
 
   @@map("channels")
 }
@@ -194,6 +195,40 @@ model MetricAnomaly {
   @@unique([channelId, metric, observedAt, rule])
   @@index([detectedAt])
   @@map("metric_anomalies")
+}
+
+/// One computed ranking (PHASE-11, RANKINGS.md). Immutable; idempotent per (ranking, version, as_of).
+model RankingRun {
+  id                 String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  rankingKey         String            @map("ranking_key")
+  methodologyVersion String            @map("methodology_version")
+  /// Data cut-off the ranking describes (window boundary).
+  asOf               DateTime          @map("as_of") @db.Timestamptz(6)
+  computedAt         DateTime          @default(now()) @map("computed_at") @db.Timestamptz(6)
+  eligibleCount      Int               @map("eligible_count")
+  entryCount         Int               @map("entry_count")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  entries            RankingSnapshot[]
+
+  @@unique([rankingKey, methodologyVersion, asOf])
+  @@index([rankingKey, asOf(sort: Desc)])
+  @@map("ranking_runs")
+}
+
+/// Ranked entries of a run (CLICKHOUSE.md "ranking_snapshots"). Append-only.
+model RankingSnapshot {
+  runId     String     @map("run_id") @db.Uuid
+  run       RankingRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  position  Int
+  channelId String     @map("channel_id") @db.Uuid
+  channel   Channel    @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  score     Float
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([runId, position])
+  @@unique([runId, channelId])
+  @@index([channelId])
+  @@map("ranking_snapshots")
 }
 
 // ---------------------------------------------------------------- Job ledger (ADR-004, ADR-006)

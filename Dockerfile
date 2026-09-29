@@ -24,6 +24,7 @@ COPY packages/analytics/package.json packages/analytics/
 COPY workers/metrics/package.json workers/metrics/
 COPY workers/metadata/package.json workers/metadata/
 COPY workers/scheduler/package.json workers/scheduler/
+COPY workers/ranking/package.json workers/ranking/
 
 FROM manifests AS build
 RUN pnpm install --frozen-lockfile

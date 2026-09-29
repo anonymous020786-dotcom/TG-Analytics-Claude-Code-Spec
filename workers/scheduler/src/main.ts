@@ -3,6 +3,7 @@ import { hostname } from 'node:os';
 import { ConfigError, defineConfig, loadConfig, redactConfig, schedulerConfigShape, schedulerSecrets } from '@tga/config';
 import { ChannelRepository, createDatabase, JobRepository, LeaseRepository } from '@tga/database';
 import { createLogger } from '@tga/logging';
+import { RANKINGS } from '@tga/analytics';
 import { handleShutdown, QUEUES } from '@tga/queues';
 import { SCHEDULER_LEASE_KEY, scheduleTick } from './scheduler';
 
@@ -34,7 +35,12 @@ function main(): void {
   let stopped = false;
   const loop = async (): Promise<void> => {
     if (stopped) return;
-    running = scheduleTick(deps, { owner, schedules, leaseTtlMs: tickMs * 3 })
+    running = scheduleTick(deps, {
+      owner,
+      schedules,
+      leaseTtlMs: tickMs * 3,
+      rankings: { keys: RANKINGS.map((r) => r.key), intervalMs: config.RANKING_REFRESH_MINUTES * 60_000 },
+    })
       .then((r) => {
         if (r.acquired) logger.info({ enqueued: r.enqueued }, 'scheduler tick');
         else logger.debug('another scheduler instance holds the lease');

@@ -22,6 +22,7 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | D-014 | Analytical storage starts on PostgreSQL behind the `AnalyticsStore` interface; ClickHouse only when measurements justify it. `ranking_snapshots` and `analytics_events` are created in PHASE-11, which produces them. | 2026-09-29 | ADR-011. |
 | D-015 | This product uses its own dedicated Telegram credentials (bot token, `api_id`/`api_hash`, MTProto account), never shared with other projects. | 2026-09-29 | Spike evidence: a shared token hit `429` on its first call; ToS 2.1 requires an own `api_id`. CAPABILITY-MATRIX §3–4. |
 | D-016 | Collected Telegram data is never used to train, fine-tune or develop AI/ML models (API ToS 1.5). | 2026-09-29 | Added to PRD §7 non-goals. |
+| D-017 | Analytics engine: pure calculators, registry, methodology versions on every result, immutable ranking runs (ADR-013). `analytics_events` deferred to PHASE-20, which will define it (amends D-014). | 2026-09-29 | ADR-013. |
 
 ## Open
 
@@ -33,3 +34,4 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | OD-006 | Plans/tiers and their limits (watchlist size, alert count, history depth, API quota, exports). | PHASE-24 | Personas only name Free/Registered, Pro/business, API. |
 | OD-007 | Payment provider(s). | PHASE-24 | Provider-agnostic abstraction required regardless. |
 | OD-008 | SEO indexation threshold (what makes an entity page "meaningful/current enough"). | PHASE-14 | Pages below threshold `noindex`. |
+| OD-015 | Approve ranking/trending v1 parameters: eligibility base 1,000 members, current value ≤ 1 day old, 1,000 entries per run, trending weights 0.7 (1 d) / 0.3 (7 d). | PHASE-13 (first public display) | Proposed in RANKINGS.md/TRENDING.md; changes create new methodology versions. |

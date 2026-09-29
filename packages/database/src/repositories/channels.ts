@@ -198,6 +198,16 @@ export class ChannelRepository {
     return rows.map((r) => r.id);
   }
 
+  /** Ranking population: active, visible channels, keyset-paginated (bounded batches). */
+  async rankable(afterId: string | undefined, limit: number): Promise<{ id: string; telegramId: bigint }[]> {
+    return this.db.channel.findMany({
+      where: { status: 'active', hiddenAt: null, ...(afterId ? { id: { gt: afterId } } : {}) },
+      orderBy: { id: 'asc' },
+      take: Math.min(Math.max(1, Math.trunc(limit)), 1_000),
+      select: { id: true, telegramId: true },
+    });
+  }
+
   /** Record a Telegram-side status change without touching history (DATA-POLICY §6). */
   async markStatus(channelId: string, status: ChannelStatus): Promise<void> {
     await this.db.channel.update({ where: { id: channelId }, data: { status } });

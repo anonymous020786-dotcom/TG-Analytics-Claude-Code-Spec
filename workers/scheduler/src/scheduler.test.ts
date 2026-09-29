@@ -69,6 +69,19 @@ describe('scheduleTick', () => {
     expect((await tick('b')).acquired).toBe(true);
   });
 
+  it('enqueues each ranking once per window with the window boundary as asOf', async () => {
+    const rankings = { keys: ['top-subscribers', 'trending'], intervalMs: HOUR };
+    const r = await scheduleTick(deps, { owner: 'a', schedules: [], now: new Date('2026-09-28T12:34:00Z'), leaseTtlMs: 60_000, rankings });
+    expect(r.enqueued[QUEUES.ranking]).toBe(2);
+    const again = await scheduleTick(deps, { owner: 'a', schedules: [], now: new Date('2026-09-28T12:59:00Z'), leaseTtlMs: 60_000, rankings });
+    expect(again.enqueued[QUEUES.ranking]).toBe(0);
+    const jobs = await db.job.findMany({ where: { queue: QUEUES.ranking }, orderBy: { idempotencyKey: 'asc' } });
+    expect(jobs.map((j) => j.payload)).toEqual([
+      { ranking: 'top-subscribers', asOf: '2026-09-28T12:00:00.000Z' },
+      { ranking: 'trending', asOf: '2026-09-28T12:00:00.000Z' },
+    ]);
+  });
+
   it('bounds work per tick and pages through many channels', async () => {
     for (let i = 0; i < 12; i += 1) await channel();
     const r = await scheduleTick(deps, { owner: 'a', schedules: [schedules[0]!], now, leaseTtlMs: 60_000, batchSize: 5, maxPerTick: 7 });

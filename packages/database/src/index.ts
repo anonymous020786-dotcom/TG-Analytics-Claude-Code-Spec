@@ -23,7 +23,8 @@ export {
 } from './repositories/jobs';
 export { LeaseRepository } from './repositories/leases';
 export { AnomalyRepository, type AnomalyInput } from './repositories/anomalies';
+export { RankingRepository, type RankingEntryView, type SaveRankingRunInput } from './repositories/rankings';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';
-export type { AuditLog, Channel, ChannelAlias, Job, MetricAnomaly, Post } from './generated/prisma/client';
+export type { AuditLog, Channel, ChannelAlias, Job, MetricAnomaly, Post, RankingRun } from './generated/prisma/client';

@@ -66,7 +66,16 @@ export interface AnalyticsStore {
   postSeries(query: SeriesQuery): Promise<SeriesPoint[]>;
   /** Most recent observation, or null when the metric was never observed. */
   latestChannelValue(channelId: string, metric: string): Promise<SeriesPoint | null>;
+  /**
+   * Batch: for each channel, the latest non-anomalous observation with observedAt in
+   * [notBefore, at]. Channels without one are absent from the map (unavailable, never 0).
+   * One query for many channels (no N+1). Bounded by MAX_BATCH_ENTITIES.
+   */
+  latestChannelValues(metric: string, channelIds: readonly string[], at: Date, notBefore: Date): Promise<Map<string, SeriesPoint>>;
 }
+
+/** Upper bound of entities per batch read. */
+export const MAX_BATCH_ENTITIES = 1_000;
 
 export class SnapshotValidationError extends Error {
   constructor(readonly issues: string[]) {

@@ -1,11 +1,13 @@
 import {
   type AnalyticsStore,
   type AppendResult,
+  MAX_BATCH_ENTITIES,
   MAX_SERIES_POINTS,
   type MetricSnapshot,
   type SeriesPoint,
   type SeriesQuery,
   type SnapshotSource,
+  SnapshotValidationError,
   validateSeriesQuery,
   validateSnapshotBatch,
 } from '@tga/types';
@@ -81,6 +83,25 @@ export class PostgresAnalyticsStore implements AnalyticsStore {
       select: { value: true, observedAt: true, source: true },
     });
     return rows.map(toPoint);
+  }
+
+  async latestChannelValues(metric: string, channelIds: readonly string[], at: Date, notBefore: Date): Promise<Map<string, SeriesPoint>> {
+    if (channelIds.length === 0) return new Map();
+    if (channelIds.length > MAX_BATCH_ENTITIES) throw new SnapshotValidationError([`batch of ${channelIds.length} exceeds MAX_BATCH_ENTITIES`]);
+    // DISTINCT ON over the (channel_id, metric, observed_at) unique index; anomalous observations excluded.
+    const rows = await this.db.$queryRaw<{ channel_id: string; value: bigint; observed_at: Date; source: string }[]>`
+      SELECT DISTINCT ON (s.channel_id) s.channel_id, s.value, s.observed_at, s.source
+      FROM channel_metric_snapshots s
+      WHERE s.metric = ${metric}
+        AND s.channel_id = ANY(${[...channelIds]}::uuid[])
+        AND s.observed_at <= ${at}
+        AND s.observed_at >= ${notBefore}
+        AND NOT EXISTS (
+          SELECT 1 FROM metric_anomalies a
+          WHERE a.channel_id = s.channel_id AND a.metric = s.metric AND a.observed_at = s.observed_at
+        )
+      ORDER BY s.channel_id, s.observed_at DESC`;
+    return new Map(rows.map((r) => [r.channel_id, toPoint({ value: r.value, observedAt: r.observed_at, source: r.source })]));
   }
 
   async latestChannelValue(channelId: string, metric: string): Promise<SeriesPoint | null> {
