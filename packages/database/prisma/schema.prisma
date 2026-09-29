@@ -42,6 +42,8 @@ model Channel {
   /// Collection status (FR-DQ-01): pending | ok | failed
   collectionStatus      String    @default("pending") @map("collection_status")
   lastCollectedAt       DateTime? @map("last_collected_at") @db.Timestamptz(6)
+  /// Observation time of the stored metadata; older observations never overwrite newer ones.
+  metadataObservedAt    DateTime? @map("metadata_observed_at") @db.Timestamptz(6)
   /// Set when a moderator hides the entity (FR-MOD-01).
   hiddenAt              DateTime? @map("hidden_at") @db.Timestamptz(6)
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)

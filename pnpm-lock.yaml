@@ -206,6 +206,47 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6)(jiti@2.7.0))
 
+  packages/validation:
+    dependencies:
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.6
+        version: 24.13.6
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6)(jiti@2.7.0))
+
+  workers/discovery:
+    dependencies:
+      '@tga/adapter-telegram':
+        specifier: workspace:*
+        version: link:../../packages/adapter-telegram
+      '@tga/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@tga/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@tga/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.6
+        version: 24.13.6
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6)(jiti@2.7.0))
+
 packages:
 
   '@borewit/text-codec@0.2.2':

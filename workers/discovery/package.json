@@ -1,0 +1,21 @@
+{
+  "name": "@tga/worker-discovery",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tga/adapter-telegram": "workspace:*",
+    "@tga/database": "workspace:*",
+    "@tga/types": "workspace:*",
+    "@tga/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.1"
+  }
+}

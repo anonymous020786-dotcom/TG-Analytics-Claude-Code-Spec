@@ -1,5 +1,5 @@
 # workers/discovery
 
-Channel discovery worker.
+Channel discovery (`@tga/worker-discovery`): `DiscoveryService` implements DISCOVERY.md (normalize, resolve, scope check, upsert, schedule). The queue consumer loop that runs it arrives in PHASE-08.
 
-Implementation begins in the phase assigned to this component.
+Tests share the `*_test` database migrated by `@tga/database` tests.
