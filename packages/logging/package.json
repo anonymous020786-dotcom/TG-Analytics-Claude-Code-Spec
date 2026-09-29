@@ -23,8 +23,8 @@
     "pino": "^10.3.1"
   },
   "devDependencies": {
-    "@types/node": "^24.19.0",
+    "@types/node": "^24.13.6",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.1"
   }
 }

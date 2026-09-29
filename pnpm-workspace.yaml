@@ -2,3 +2,21 @@ packages:
   - apps/*
   - packages/*
   - workers/*
+
+# Supply-chain hardening (THREAT-MODEL T13).
+# Wait 7 days before installing newly published versions.
+minimumReleaseAge: 10080
+# Block transitive dependencies from git/tarball/other untrusted sources.
+blockExoticSubdeps: true
+# Refuse versions whose publish trust level is lower than previously seen.
+trustPolicy: no-downgrade
+
+# Install scripts are denied unless listed here.
+allowBuilds:
+  prisma: true
+  "@prisma/engines": true
+
+# Patched transitive versions for advisories in Prisma CLI dependencies (see ADR-010).
+overrides:
+  mysql2: ">=3.23.1 <4"
+  deepmerge-ts: ">=8.0.0 <9"

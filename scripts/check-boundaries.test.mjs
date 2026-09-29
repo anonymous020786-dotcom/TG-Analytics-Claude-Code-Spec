@@ -46,8 +46,15 @@ describe('checkPackage', () => {
     expect(checkPackage(pkg({ dir: 'packages/adapter-telegram', name: '@tga/adapter-telegram', imports: [imp('telegram')] }))).toEqual([]);
   });
 
+  it('allows database drivers only in packages/database', () => {
+    expect(checkPackage(pkg({ dir: 'packages/database', name: '@tga/database', dependencies: ['@prisma/client', 'pg'] }))).toEqual([]);
+    const v = checkPackage(pkg({ dir: 'apps/api', name: '@tga/api', imports: [imp('@prisma/client'), imp('pg')] }));
+    expect(v).toHaveLength(2);
+    expect(v[0]).toMatch('may only be imported by packages/database');
+  });
+
   it('rejects I/O modules in pure libraries', () => {
-    const v = checkPackage(pkg({ dir: 'packages/analytics', name: '@tga/analytics', imports: [imp('node:fs'), imp('pg')] }));
+    const v = checkPackage(pkg({ dir: 'packages/analytics', name: '@tga/analytics', imports: [imp('node:fs'), imp('ioredis')] }));
     expect(v).toHaveLength(2);
   });
 

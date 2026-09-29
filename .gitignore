@@ -23,3 +23,6 @@ Thumbs.db
 # Next.js / TypeScript generated
 next-env.d.ts
 *.tsbuildinfo
+
+# Prisma generated client (built by `prisma generate`)
+packages/database/src/generated/

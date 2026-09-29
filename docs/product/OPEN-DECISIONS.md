@@ -18,6 +18,7 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | D-010 | Phase-plan proposal adopted in full (was OD-011): references corrected, scopes extended (01, 02, 18, 27, 28, 29, 30), PHASE-05A/11A/11B added. | 2026-09-29 | `docs/phases/PHASE-PLAN-PROPOSAL.md` status Adopted. |
 | D-011 | ADR-006 accepted: Redis-backed queue transport plus PostgreSQL job ledger (was OD-012). | 2026-09-29 | Library chosen in PHASE-02/08. |
 | D-012 | ADR-007 accepted: admin UI hosted in `apps/web` under `/admin` initially (was OD-013). | 2026-09-29 | `apps/admin` stays a placeholder. |
+| D-013 | PHASE-04 creates only tables whose columns the spec defines now: catalog (channels, channel_aliases, categories, channel_categories, posts, post_media), job ledger (jobs, job_attempts, dead_letter_jobs) and administration (audit_logs, system_settings, feature_flags). User, auth, tracking, API-key, billing and bot tables are created by their own phases (16, 17, 19, 20, 21, 23, 24, 25) with their own migrations. | 2026-09-29 | Avoids inventing columns; ADR-010. |
 
 ## Open
 

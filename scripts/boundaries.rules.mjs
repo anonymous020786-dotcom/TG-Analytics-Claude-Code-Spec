@@ -35,3 +35,6 @@ export const PROVIDER_SDKS = [
   '@aws-sdk/*', '@google-cloud/*', 'minio',
   'meilisearch', 'typesense', '@elastic/elasticsearch', '@opensearch-project/opensearch',
 ];
+
+/** Database drivers/ORM: only packages/database may import these (repositories are the access path). */
+export const DATABASE_DRIVERS = ['@prisma/client', '@prisma/adapter-pg', 'prisma', 'pg', 'postgres', 'kysely', 'knex'];

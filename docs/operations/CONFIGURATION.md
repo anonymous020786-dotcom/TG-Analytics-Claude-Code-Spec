@@ -39,3 +39,14 @@ Status: PHASE-03 baseline. Mechanism: `@tga/config` (ADR-009).
 cp .env.example .env
 pnpm --filter @tga/api build && pnpm --filter @tga/api start:local   # loads ../../.env via --env-file-if-exists
 ```
+
+### Database variables (PHASE-04)
+
+These are used by `packages/database` tooling and tests. Application processes add them to their own schemas when they first use the database.
+
+| Variable | Used by | Purpose | Secret |
+|---|---|---|---|
+| `POSTGRES_PASSWORD` | docker-compose (local) | Local superuser password | yes |
+| `DATABASE_URL` | Prisma migrate commands | Target database | yes |
+| `SHADOW_DATABASE_URL` | `migrate dev`, `db:check` | Prisma shadow database | yes |
+| `TEST_DATABASE_URL` | integration tests | Must end in `_test`; wiped on every run | yes |

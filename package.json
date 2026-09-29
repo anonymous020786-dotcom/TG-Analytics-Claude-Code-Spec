@@ -12,7 +12,10 @@
     "test": "vitest run --config scripts/vitest.config.mjs && pnpm -r --if-present test",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "audit": "pnpm audit --audit-level high",
-    "ci": "pnpm lint && pnpm typecheck && pnpm check:boundaries && pnpm build && pnpm test && pnpm audit"
+    "ci": "pnpm lint && pnpm typecheck && pnpm check:boundaries && pnpm db:check && pnpm build && pnpm test && pnpm audit",
+    "db:up": "docker compose up -d postgres",
+    "db:migrate": "pnpm --filter @tga/database migrate:deploy",
+    "db:check": "pnpm --filter @tga/database migrate:check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -20,6 +23,6 @@
     "globals": "^17.12.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.1"
   }
 }
