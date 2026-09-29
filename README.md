@@ -1,6 +1,6 @@
 # TG Analytics — Claude Code Engineering Specification
 
-Source-of-truth engineering specification for a production-grade Telegram public-channel analytics, discovery, monitoring, API and bot platform.
+Source-of-truth engineering specification for a production-grade Telegram public channel and group analytics, discovery, monitoring, API and bot platform.
 
 ## Execution
 1. Read `CLAUDE.md`.
