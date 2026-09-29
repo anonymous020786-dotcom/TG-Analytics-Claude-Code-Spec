@@ -47,9 +47,10 @@ model Channel {
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  aliases    ChannelAlias[]
-  categories ChannelCategory[]
-  posts      Post[]
+  aliases         ChannelAlias[]
+  categories      ChannelCategory[]
+  posts           Post[]
+  metricSnapshots ChannelMetricSnapshot[]
 
   @@map("channels")
 }
@@ -96,17 +97,18 @@ model ChannelCategory {
 }
 
 model Post {
-  id                String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  channelId         String      @map("channel_id") @db.Uuid
-  channel           Channel     @relation(fields: [channelId], references: [id], onDelete: Restrict)
-  telegramMessageId BigInt      @map("telegram_message_id")
-  postedAt          DateTime    @map("posted_at") @db.Timestamptz(6)
-  editedAt          DateTime?   @map("edited_at") @db.Timestamptz(6)
+  id                String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  channelId         String               @map("channel_id") @db.Uuid
+  channel           Channel              @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  telegramMessageId BigInt               @map("telegram_message_id")
+  postedAt          DateTime             @map("posted_at") @db.Timestamptz(6)
+  editedAt          DateTime?            @map("edited_at") @db.Timestamptz(6)
   /// Channel posts only; group message text is never stored (DATA-POLICY §4, D-006).
   text              String?
-  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
   media             PostMedia[]
+  metricSnapshots   PostMetricSnapshot[]
 
   @@unique([channelId, telegramMessageId])
   /// Cursor pagination: newest first within a channel.
@@ -128,6 +130,43 @@ model PostMedia {
 
   @@unique([postId, position])
   @@map("post_media")
+}
+
+// ---------------------------------------------------------------- Analytical snapshots (PHASE-05, ADR-011)
+// Append-only raw observations; UPDATE is blocked by trigger. One row per
+// (entity, metric, observed_at): re-appending the same observation is a no-op.
+
+model ChannelMetricSnapshot {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  channelId  String   @map("channel_id") @db.Uuid
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  metric     String
+  value      BigInt
+  observedAt DateTime @map("observed_at") @db.Timestamptz(6)
+  /// bot_api | mtproto (ADR-005)
+  source     String
+  /// Provenance: collection job that produced the observation (no FK; ledger rows may be pruned).
+  jobId      String?  @map("job_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Also serves range and latest-value queries per (channel, metric).
+  @@unique([channelId, metric, observedAt])
+  @@map("channel_metric_snapshots")
+}
+
+model PostMetricSnapshot {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  postId     String   @map("post_id") @db.Uuid
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Restrict)
+  metric     String
+  value      BigInt
+  observedAt DateTime @map("observed_at") @db.Timestamptz(6)
+  source     String
+  jobId      String?  @map("job_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([postId, metric, observedAt])
+  @@map("post_metric_snapshots")
 }
 
 // ---------------------------------------------------------------- Job ledger (ADR-004, ADR-006)

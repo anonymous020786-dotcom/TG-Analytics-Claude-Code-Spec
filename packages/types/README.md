@@ -1,5 +1,5 @@
 # packages/types
 
-Shared domain types.
+Shared domain types (`@tga/types`). Pure: no I/O.
 
-Implementation begins in the phase assigned to this component.
+Current contents: the analytical storage contract (`AnalyticsStore`, `MetricSnapshot`, validation helpers; ADR-011).

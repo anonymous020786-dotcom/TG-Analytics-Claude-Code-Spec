@@ -30,7 +30,7 @@ Start as a modular monolith plus workers (ADR-001). Extract services only after 
 | C5 | Scheduler | Process entry point (location fixed in PHASE-02) | Process | Enqueues due jobs only; no business logic, no external calls | PostgreSQL (read schedules), queues (produce) |
 | C6 | Workers | `workers/*` | Processes | Asynchronous external/data processing; one worker type per queue (see QUEUE-ARCHITECTURE.md) | Adapters, PostgreSQL, analytical store, queues, object storage |
 | C7 | PostgreSQL | Infrastructure | Datastore | Transactional source of truth, job ledger (ADR-002, ADR-006) | — |
-| C8 | Analytical store | Infrastructure | Datastore | Append-only historical snapshots (ADR-002); backing technology chosen in PHASE-05 | — |
+| C8 | Analytical store | Infrastructure | Datastore | Append-only historical snapshots behind the `AnalyticsStore` interface (ADR-002). PostgreSQL tables first; ClickHouse only when measured load justifies it (ADR-011) | — |
 | C9 | Redis | Infrastructure | Datastore | Cache, rate-limiter state, queue transport (ADR-006) | — |
 | C10 | Object storage | Infrastructure | Datastore | Export files and other generated artifacts; no copied Telegram media (DATA-POLICY §4) | — |
 | C11 | Search index | Infrastructure / adapter | Datastore | Entity search; engine chosen in PHASE-12 behind an adapter | — |

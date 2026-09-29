@@ -38,3 +38,7 @@ pnpm db:migrate               # prisma migrate deploy against DATABASE_URL
 
 - Keyset (cursor) pagination only; cursors are opaque, validated and rejected with `InvalidCursorError` when tampered.
 - `MAX_PAGE_SIZE` = 100 and the pool/timeout defaults in `DATABASE_DEFAULTS` are **provisional** until OD-005 sets targets.
+
+## Analytical snapshots (PHASE-05)
+
+`channel_metric_snapshots` and `post_metric_snapshots` are append-only (UPDATE blocked by trigger). Access them only through `PostgresAnalyticsStore` (ADR-011). Deleting snapshots is reserved for the retention/removal policy (OD-004) and needs explicit approval.
