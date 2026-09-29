@@ -1,7 +1,7 @@
 import { BotApiClient, DEFAULT_BOT_API_LIMIT, RedisRateLimiter, TelegramClientAdapter } from '@tga/adapter-telegram';
 import { Redis } from 'ioredis';
 import { ConfigError, defineConfig, loadConfig, redactConfig, workerConfigShape, workerSecrets } from '@tga/config';
-import { ChannelRepository, createDatabase, JobRepository, PostgresAnalyticsStore } from '@tga/database';
+import { AnomalyRepository, ChannelRepository, createDatabase, JobRepository, PostgresAnalyticsStore } from '@tga/database';
 import { createLogger } from '@tga/logging';
 import { BullTransport, QUEUES, runQueueWorker } from '@tga/queues';
 import { collectMetrics } from './collect-metrics';
@@ -29,7 +29,7 @@ function main(): void {
     limiter: new RedisRateLimiter({ redis: limiterRedis, prefix: `${config.QUEUE_PREFIX}:ratelimit:`, ...DEFAULT_BOT_API_LIMIT }),
     credentialId: config.TELEGRAM_CREDENTIAL_ID,
   });
-  const deps = { channels: new ChannelRepository(db), store: new PostgresAnalyticsStore(db), telegram };
+  const deps = { channels: new ChannelRepository(db), store: new PostgresAnalyticsStore(db), anomalies: new AnomalyRepository(db), telegram };
 
   runQueueWorker<{ channelId: string }>({
     ledger: new JobRepository(db),

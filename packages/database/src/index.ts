@@ -3,6 +3,7 @@ export { clampLimit, DEFAULT_PAGE_SIZE, InvalidCursorError, MAX_PAGE_SIZE, type 
 export {
   ChannelRepository,
   normalizeUsername,
+  type ChannelQualityView,
   type ChannelStatus,
   type ListChannelsInput,
   type TelegramEntityInput,
@@ -21,7 +22,8 @@ export {
   type StartedJob,
 } from './repositories/jobs';
 export { LeaseRepository } from './repositories/leases';
+export { AnomalyRepository, type AnomalyInput } from './repositories/anomalies';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';
-export type { AuditLog, Channel, ChannelAlias, Job, Post } from './generated/prisma/client';
+export type { AuditLog, Channel, ChannelAlias, Job, MetricAnomaly, Post } from './generated/prisma/client';

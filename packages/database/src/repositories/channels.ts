@@ -1,4 +1,5 @@
 import type { Database } from '../client';
+import type { FailureClass } from '@tga/types';
 import { type Channel, Prisma } from '../generated/prisma/client';
 import { clampLimit, decodeCursor, toPage, type Page } from '../pagination';
 
@@ -21,6 +22,16 @@ export interface UpsertResult {
   previousUsername: string | null;
   /** True when the observation was older than stored metadata and did not overwrite it. */
   stale: boolean;
+}
+
+export interface ChannelQualityView {
+  id: string;
+  status: string;
+  collectionStatus: string;
+  lastCollectionErrorClass: string | null;
+  lastCollectedAt: Date | null;
+  memberCountObservedAt: Date | null;
+  metadataObservedAt: Date | null;
 }
 
 /** Telegram-side availability (DATA-POLICY §6). History is always kept. */
@@ -140,14 +151,30 @@ export class ChannelRepository {
   async recordMemberCount(channelId: string, count: bigint, observedAt: Date): Promise<boolean> {
     const { count: updated } = await this.db.channel.updateMany({
       where: { id: channelId, OR: [{ memberCountObservedAt: null }, { memberCountObservedAt: { lt: observedAt } }] },
-      data: { memberCount: count, memberCountObservedAt: observedAt, lastCollectedAt: observedAt, collectionStatus: 'ok' },
+      data: { memberCount: count, memberCountObservedAt: observedAt, lastCollectedAt: observedAt, collectionStatus: 'ok', lastCollectionErrorClass: null },
     });
     return updated === 1;
   }
 
-  /** Collection failed: record it; previous observations stay untouched (FR-DQ-02). */
-  async recordCollectionFailure(channelId: string): Promise<void> {
-    await this.db.channel.updateMany({ where: { id: channelId }, data: { collectionStatus: 'failed' } });
+  /** Collection failed: record it and why; previous observations stay untouched (FR-DQ-02). */
+  async recordCollectionFailure(channelId: string, errorClass: FailureClass = 'unknown'): Promise<void> {
+    await this.db.channel.updateMany({ where: { id: channelId }, data: { collectionStatus: 'failed', lastCollectionErrorClass: errorClass } });
+  }
+
+  /** Data-quality view of one channel (FR-DQ-01): collection status, cause and observation times. */
+  async qualityView(channelId: string): Promise<ChannelQualityView | null> {
+    return this.db.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        status: true,
+        collectionStatus: true,
+        lastCollectionErrorClass: true,
+        lastCollectedAt: true,
+        memberCountObservedAt: true,
+        metadataObservedAt: true,
+      },
+    });
   }
 
   /**

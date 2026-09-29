@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tga/adapter-telegram": "workspace:*",
+    "@tga/analytics": "workspace:*",
     "@tga/config": "workspace:*",
     "@tga/database": "workspace:*",
     "@tga/logging": "workspace:*",
