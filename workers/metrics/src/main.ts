@@ -1,4 +1,5 @@
-import { BotApiClient, DEFAULT_BOT_API_LIMIT, InMemoryRateLimiter, TelegramClientAdapter } from '@tga/adapter-telegram';
+import { BotApiClient, DEFAULT_BOT_API_LIMIT, RedisRateLimiter, TelegramClientAdapter } from '@tga/adapter-telegram';
+import { Redis } from 'ioredis';
 import { ConfigError, defineConfig, loadConfig, redactConfig, workerConfigShape, workerSecrets } from '@tga/config';
 import { ChannelRepository, createDatabase, JobRepository, PostgresAnalyticsStore } from '@tga/database';
 import { createLogger } from '@tga/logging';
@@ -21,9 +22,11 @@ function main(): void {
 
   const db = createDatabase({ url: config.DATABASE_URL });
   const transport = new BullTransport({ redisUrl: config.REDIS_URL, prefix: config.QUEUE_PREFIX });
+  // One Telegram budget per credential shared by every worker process (PHASE-09).
+  const limiterRedis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: 1, connectTimeout: 5_000 });
   const telegram = new TelegramClientAdapter({
     botApi: new BotApiClient({ token: config.TELEGRAM_BOT_TOKEN }),
-    limiter: new InMemoryRateLimiter(DEFAULT_BOT_API_LIMIT),
+    limiter: new RedisRateLimiter({ redis: limiterRedis, prefix: `${config.QUEUE_PREFIX}:ratelimit:`, ...DEFAULT_BOT_API_LIMIT }),
     credentialId: config.TELEGRAM_CREDENTIAL_ID,
   });
   const deps = { channels: new ChannelRepository(db), store: new PostgresAnalyticsStore(db), telegram };
@@ -39,6 +42,7 @@ function main(): void {
     },
     release: async () => {
       await transport.close();
+      await limiterRedis.quit();
       await db.$disconnect();
     },
   });

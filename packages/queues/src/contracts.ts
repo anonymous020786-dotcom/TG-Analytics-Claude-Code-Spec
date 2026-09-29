@@ -60,10 +60,13 @@ export interface LedgerJob {
 
 export interface JobLedger {
   claimForDispatch(queues: readonly string[], limit: number, staleAfterMs: number): Promise<{ id: string; queue: string }[]>;
-  startAttempt(jobId: string): Promise<{ job: LedgerJob; execution: number } | null>;
+  startAttempt(jobId: string, leaseMs?: number): Promise<{ job: LedgerJob; execution: number } | null>;
   completeAttempt(jobId: string, execution: number): Promise<void>;
-  failAttempt(jobId: string, execution: number, errorClass: FailureClass, message: string): Promise<void>;
+  heartbeat(jobId: string, leaseMs: number): Promise<boolean>;
+  /** Applies the retry policy: requeue with `retryDelayMs`, fail (permanent) or dead-letter. */
+  recordFailure(jobId: string, execution: number, errorClass: FailureClass, message: string, retryDelayMs: number): Promise<'retry_scheduled' | 'failed' | 'dead'>;
   rescheduleAfterRateLimit(jobId: string, execution: number, retryAfterMs: number, message: string): Promise<'rescheduled' | 'exhausted'>;
+  recoverExpiredLeases(limit: number, retryDelayMs: number): Promise<{ jobId: string; outcome: 'retry_scheduled' | 'failed' | 'dead' }[]>;
 }
 
 /** Transport contract (ADR-006): carries ledger ids only. */

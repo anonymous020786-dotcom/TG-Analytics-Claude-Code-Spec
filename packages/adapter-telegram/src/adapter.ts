@@ -98,7 +98,7 @@ export class TelegramClientAdapter {
       throw new TelegramError('permanent', 'capability_unverified', `Operation "${operation}" is not verified (CAPABILITY-MATRIX)`, { backend });
     }
     const key = `${backend}:${this.options.credentialId}`;
-    const permit = this.options.limiter.tryAcquire(key);
+    const permit = await this.options.limiter.tryAcquire(key);
     if (!permit.ok) {
       throw new TelegramError('rate_limited', 'local_rate_limit', 'Local rate limit reached', { backend, retryAfterMs: permit.retryAfterMs });
     }
@@ -107,7 +107,7 @@ export class TelegramClientAdapter {
       return { value, observedAt: this.now(), source: backend };
     } catch (error) {
       if (error instanceof TelegramError && error.failureClass === 'rate_limited' && error.retryAfterMs !== undefined) {
-        this.options.limiter.penalize(key, error.retryAfterMs);
+        await this.options.limiter.penalize(key, error.retryAfterMs);
       }
       throw error;
     }

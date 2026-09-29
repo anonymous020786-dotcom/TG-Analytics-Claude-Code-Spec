@@ -2,7 +2,7 @@ import { createLogger } from '@tga/logging';
 import { Writable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import { type JobLedger, type LedgerJob, parsePayload, PayloadError, type QueueTransport } from './contracts';
-import { ConsumerRuntime, Dispatcher, handleShutdown, safeMessage } from './runtime';
+import { computeBackoffMs, ConsumerRuntime, Dispatcher, handleShutdown, Reaper, safeMessage } from './runtime';
 
 const logger = createLogger({ name: 'test', level: 'silent', destination: new Writable({ write: (_c, _e, cb) => cb() }) });
 const CHANNEL = '01920000-0000-7000-8000-000000000001';
@@ -19,8 +19,10 @@ function fakeLedger(started: { job: LedgerJob; execution: number } | null = { jo
     ]),
     startAttempt: vi.fn(async () => started),
     completeAttempt: vi.fn(async () => {}),
-    failAttempt: vi.fn(async (_id: string, _execution: number, _cls: string, _msg: string) => {}),
+    heartbeat: vi.fn(async (_id: string, _leaseMs: number) => true),
+    recordFailure: vi.fn(async (_id: string, _execution: number, _cls: string, _msg: string, _delay: number) => 'retry_scheduled' as 'retry_scheduled' | 'failed' | 'dead'),
     rescheduleAfterRateLimit: vi.fn(async () => 'rescheduled' as const),
+    recoverExpiredLeases: vi.fn(async () => [{ jobId: 'x', outcome: 'retry_scheduled' as const }]),
   } satisfies JobLedger;
 }
 
@@ -77,9 +79,10 @@ describe('ConsumerRuntime.process', () => {
   it('fails poisoned payloads as invalid_input without running the handler', async () => {
     const ledger = fakeLedger({ job: job({ payload: { channelId: 'nope' } }), execution: 1 });
     const { rt, handler } = make(ledger);
-    expect(await rt.process('j1')).toBe('failed');
+    ledger.recordFailure.mockResolvedValueOnce('dead');
+    expect(await rt.process('j1')).toBe('dead');
     expect(handler).not.toHaveBeenCalled();
-    expect(ledger.failAttempt).toHaveBeenCalledWith('j1', 1, 'invalid_input', expect.stringContaining('PayloadError'));
+    expect(ledger.recordFailure).toHaveBeenCalledWith('j1', 1, 'invalid_input', expect.stringContaining('PayloadError'), expect.any(Number));
   });
 
   it('reschedules rate-limited jobs using the provider wait', async () => {
@@ -88,7 +91,7 @@ describe('ConsumerRuntime.process', () => {
     const { rt } = make(ledger, vi.fn(async () => Promise.reject(err)));
     expect(await rt.process('j1')).toBe('rescheduled');
     expect(ledger.rescheduleAfterRateLimit).toHaveBeenCalledWith('j1', 1, 33_000, expect.any(String));
-    expect(ledger.failAttempt).not.toHaveBeenCalled();
+    expect(ledger.recordFailure).not.toHaveBeenCalled();
   });
 
   it('records classified failures, and unknown errors as "unknown"', async () => {
@@ -96,7 +99,7 @@ describe('ConsumerRuntime.process', () => {
     const classified = Object.assign(new Error('no'), { failureClass: 'authorization' });
     await make(ledger, vi.fn(async () => Promise.reject(classified))).rt.process('j1');
     await make(ledger, vi.fn(async () => Promise.reject(new TypeError('bug')))).rt.process('j1');
-    expect(ledger.failAttempt.mock.calls.map((c) => c[2])).toEqual(['authorization', 'unknown']);
+    expect(ledger.recordFailure.mock.calls.map((c) => c[2])).toEqual(['authorization', 'unknown']);
   });
 });
 
@@ -126,5 +129,57 @@ describe('handleShutdown', () => {
     expect(process.listeners('SIGTERM').length).toBe(before);
     process.removeAllListeners('SIGINT');
     exit.mockRestore();
+  });
+});
+
+describe('reliability (PHASE-09)', () => {
+  it('computes bounded exponential backoff with equal jitter', () => {
+    const p = { baseMs: 1_000, maxMs: 10_000 };
+    expect([1, 2, 3, 4, 5, 50].map((a) => computeBackoffMs(a, p, () => 0))).toEqual([500, 1_000, 2_000, 4_000, 5_000, 5_000]);
+    expect([1, 2, 3, 4, 5, 50].map((a) => computeBackoffMs(a, p, () => 0.999999))).toEqual([999, 1_999, 3_999, 7_999, 9_999, 9_999]);
+  });
+
+  it('passes the backoff delay for the current attempt to the ledger', async () => {
+    const ledger = fakeLedger({ job: job({ attempt: 2 }), execution: 3 });
+    const rt = new ConsumerRuntime({ ledger, transport: fakeTransport(), queue: 'channel.metrics', logger, backoff: { baseMs: 1_000, maxMs: 60_000 }, handler: vi.fn(async () => Promise.reject(Object.assign(new Error('t'), { failureClass: 'transient' }))) });
+    expect(await rt.process('j1')).toBe('retry_scheduled');
+    const delay = ledger.recordFailure.mock.calls[0]?.[4] ?? -1;
+    expect(delay).toBeGreaterThanOrEqual(1_000);
+    expect(delay).toBeLessThan(2_000);
+  });
+
+  it('heartbeats while a long handler runs, and stops afterwards', async () => {
+    vi.useFakeTimers();
+    try {
+      const ledger = fakeLedger();
+      let release!: () => void;
+      const handler = vi.fn(() => new Promise<void>((r) => (release = r)));
+      const rt = new ConsumerRuntime({ ledger, transport: fakeTransport(), queue: 'channel.metrics', logger, leaseMs: 30_000, handler });
+      const done = rt.process('j1');
+      await vi.advanceTimersByTimeAsync(35_000);
+      expect(ledger.heartbeat.mock.calls.length).toBeGreaterThanOrEqual(3);
+      expect(ledger.heartbeat).toHaveBeenCalledWith('j1', 30_000);
+      release();
+      await done;
+      const after = ledger.heartbeat.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(ledger.heartbeat.mock.calls.length).toBe(after);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reports rate-limit reschedule exhaustion as dead', async () => {
+    const ledger = fakeLedger();
+    ledger.rescheduleAfterRateLimit.mockResolvedValueOnce('exhausted' as never);
+    const err = Object.assign(new Error('slow'), { failureClass: 'rate_limited', retryAfterMs: 1_000 });
+    const rt = new ConsumerRuntime({ ledger, transport: fakeTransport(), queue: 'channel.metrics', logger, handler: vi.fn(async () => Promise.reject(err)) });
+    expect(await rt.process('j1')).toBe('dead');
+  });
+
+  it('Reaper recovers expired leases through the ledger', async () => {
+    const ledger = fakeLedger();
+    expect(await new Reaper({ ledger, logger, batchSize: 50 }).tick()).toBe(1);
+    expect(ledger.recoverExpiredLeases).toHaveBeenCalledWith(50, expect.any(Number));
   });
 });

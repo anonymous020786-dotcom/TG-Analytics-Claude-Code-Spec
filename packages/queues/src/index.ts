@@ -12,7 +12,14 @@ export {
   type QueueTransport,
 } from './contracts';
 export {
+  type BackoffPolicy,
+  computeBackoffMs,
   ConsumerRuntime,
+  DEFAULT_BACKOFF,
+  JOB_LEASE_MS,
+  type ProcessOutcome,
+  Reaper,
+  type ReaperOptions,
   Dispatcher,
   handleShutdown,
   runQueueWorker,

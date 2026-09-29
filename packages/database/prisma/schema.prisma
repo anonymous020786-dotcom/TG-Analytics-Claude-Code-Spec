@@ -191,6 +191,8 @@ model Job {
   scheduledAt    DateTime       @default(now()) @map("scheduled_at") @db.Timestamptz(6)
   /// Set when the dispatcher pushed the job to the transport (outbox); cleared on reschedule.
   dispatchedAt   DateTime?      @map("dispatched_at") @db.Timestamptz(6)
+  /// While running: the worker must heartbeat before this time or the reaper recovers the job.
+  leaseExpiresAt DateTime?      @map("lease_expires_at") @db.Timestamptz(6)
   startedAt      DateTime?      @map("started_at") @db.Timestamptz(6)
   finishedAt     DateTime?      @map("finished_at") @db.Timestamptz(6)
   /// Failure class (QUEUE-ARCHITECTURE §3).
@@ -203,6 +205,7 @@ model Job {
   @@unique([queue, idempotencyKey])
   @@index([queue, status, scheduledAt])
   @@index([entityId])
+  @@index([status, leaseExpiresAt])
   @@map("jobs")
 }
 
@@ -237,6 +240,19 @@ model DeadLetterJob {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("dead_letter_jobs")
+}
+
+/// Named, expiring locks (PHASE-09): scheduler singleton, per-entity collection locks.
+model Lease {
+  key       String   @id
+  /// Opaque holder id (process/instance), never a secret.
+  owner     String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("leases")
 }
 
 // ---------------------------------------------------------------- Administration

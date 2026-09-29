@@ -74,3 +74,12 @@ Retry limits and backoff parameters are configuration with a mandatory maximum, 
   - Backoff, DLQ, stuck-`running` recovery and re-drive are PHASE-09.
 - **Consumers:** `workers/discovery` (`channel.discovery`), `workers/metadata` (`channel.metadata`), `workers/metrics` (`channel.metrics`). `channel.posts` waits for OD-003; `search.index` waits for PHASE-12. Those jobs stay queued in the ledger.
 - **Lifecycle:** typed config (`workerConfigShape`), bounded concurrency, graceful shutdown on SIGTERM/SIGINT (in-flight jobs finish, then connections close; 30 s cap).
+
+## 7. Reliability (PHASE-09, ADR-012)
+
+- **Retry policy:** `recordFailure` requeues `transient`, `dependency_down` and `unknown` failures with exponential backoff and equal jitter while attempts remain. `permanent` ends as `failed`; everything else is dead-lettered (`dead` + `dead_letter_jobs`).
+- **Leases:** running jobs hold `lease_expires_at`, renewed by heartbeat. The `Reaper` (in every worker) recovers expired leases.
+- **Attempt history:** one `job_attempts` row per execution with outcome, class and message; `attemptHistory(jobId)`.
+- **Re-drive:** `redrive(jobId, actor)` is transactional, idempotent and audited. Operator CLI: `pnpm --filter @tga/worker-scheduler dlq:local list | redrive <jobId> --actor <id>`.
+- **Scheduler:** `workers/scheduler` is a lease singleton. It uses per-window idempotency keys, never stacks jobs for an entity with an unfinished job, and works in bounded batches. Intervals are configuration (provisional, OD-005).
+- **Per-entity exclusion:** enforced at scheduling. Collector writes are concurrency-safe (ADR-012).

@@ -9,7 +9,7 @@ export function testDb(): Database {
 export async function resetTables(db: Database): Promise<void> {
   await db.$executeRawUnsafe(
     'TRUNCATE post_media, posts, channel_categories, categories, channel_aliases, channels, ' +
-      'dead_letter_jobs, job_attempts, jobs, feature_flags, system_settings RESTART IDENTITY CASCADE',
+      'dead_letter_jobs, job_attempts, jobs, feature_flags, system_settings, leases RESTART IDENTITY CASCADE',
   );
 }
 
