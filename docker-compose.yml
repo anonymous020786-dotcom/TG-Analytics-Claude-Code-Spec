@@ -1,0 +1,19 @@
+# Local development stack. Ports bind to localhost only (DEPLOYMENT.md).
+# PostgreSQL and Redis are added with PHASE-04 / PHASE-08; config validation with PHASE-03.
+services:
+  api:
+    build: { context: ., target: api }
+    ports: ["127.0.0.1:3001:3001"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  web:
+    build: { context: ., target: web }
+    ports: ["127.0.0.1:3000:3000"]
+    read_only: true
+    tmpfs: ["/app/apps/web/.next/cache"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped

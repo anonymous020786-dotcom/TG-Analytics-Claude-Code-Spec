@@ -1,0 +1,25 @@
+{
+  "name": "tg-analytics",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "build": "pnpm -r --if-present build",
+    "test": "vitest run --config scripts/vitest.config.mjs && pnpm -r --if-present test",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "audit": "pnpm audit --audit-level high",
+    "ci": "pnpm lint && pnpm typecheck && pnpm check:boundaries && pnpm build && pnpm test && pnpm audit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.2"
+  }
+}

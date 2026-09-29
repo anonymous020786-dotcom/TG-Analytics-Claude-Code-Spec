@@ -16,3 +16,15 @@ PHASE-00 through PHASE-37 (plus PHASE-05A, 11A, 11B) are sequential gates. Order
 
 Core principle:
 Telegram supported interfaces -> ingestion workers -> durable queues -> normalized storage -> analytics -> search/API/cache -> web/dashboard/bot.
+
+## Development
+
+Requires Node.js 24 (`.node-version`), pnpm 11 (`corepack enable`) and Docker.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run ci                 # lint, typecheck, boundaries, build, test, audit
+docker compose up --build   # api on 127.0.0.1:3001, web on 127.0.0.1:3000
+```
+
+Tooling decisions: `docs/adr/ADR-008-workspace-tooling.md`. Import rules: `scripts/boundaries.rules.mjs` (mirrors `docs/architecture/SERVICE-BOUNDARIES.md` §4).
