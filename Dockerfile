@@ -17,6 +17,8 @@ COPY packages/config/package.json packages/config/
 COPY packages/database/package.json packages/database/
 COPY packages/types/package.json packages/types/
 COPY packages/adapter-telegram/package.json packages/adapter-telegram/
+COPY packages/validation/package.json packages/validation/
+COPY workers/discovery/package.json workers/discovery/
 
 FROM manifests AS build
 RUN pnpm install --frozen-lockfile

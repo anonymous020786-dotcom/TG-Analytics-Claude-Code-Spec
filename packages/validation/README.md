@@ -1,5 +1,5 @@
 # packages/validation
 
-Shared validation schemas.
+Shared validation (`@tga/validation`). Pure: no I/O.
 
-Implementation begins in the phase assigned to this component.
+Current contents: `normalizeTelegramReference` for discovery input (DISCOVERY.md).
