@@ -1,6 +1,6 @@
 # Functional / Non-Functional Requirements
 
-Status: PHASE-00 draft. Release tag `R1` = MVP per `PRD.md` §6 (pending OD-002).
+Status: PHASE-00 accepted baseline. Release tag `R1` = MVP per `PRD.md` §6 (D-005).
 Every requirement traces to its source document and to the phase that implements it. Acceptance criteria (AC) are written to be verifiable by an automated test or a recorded manual check.
 
 ## 1. Summary

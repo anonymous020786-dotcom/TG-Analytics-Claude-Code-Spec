@@ -1,11 +1,11 @@
 # Product Requirements Document
 
-Status: PHASE-00 draft. Owner decisions are logged in `docs/product/OPEN-DECISIONS.md` (D-xxx = decided, OD-xxx = open).
+Status: PHASE-00 accepted baseline. Owner decisions are logged in `docs/product/OPEN-DECISIONS.md` (D-xxx = decided, OD-xxx = open).
 Companion documents: `REQUIREMENTS.md` (feature inventory, NFRs, acceptance criteria), `DATA-POLICY.md`.
 
 ## 1. Problem
 
-Telegram public-channel and public-group data is distributed and difficult to analyze historically, search, compare and monitor consistently.
+Telegram public channel and public group data is distributed and difficult to analyze historically, search, compare and monitor consistently.
 
 ## 2. Product
 
@@ -49,9 +49,9 @@ Discovery, search, entity profiles, historical statistics, post analytics, growt
 
 ## 6. MVP boundary
 
-The spec defines launch as PHASE-36 (Production Launch), whose gates cover every capability delivered in PHASE-01 through PHASE-35. **Default MVP (derived from the phase plan): Release 1 = all capabilities in `REQUIREMENTS.md` §2 marked `R1`.**
+The spec defines launch as PHASE-36 (Production Launch), whose gates cover every capability delivered in PHASE-01 through PHASE-35. **MVP (D-005, derived from the phase plan): Release 1 = all capabilities in `REQUIREMENTS.md` §2 marked `R1`.**
 
-The owner may narrow the MVP (OD-002). Until OD-002 is resolved, every §2 feature is `R1`. Anything not listed in `REQUIREMENTS.md` §2 is **not** in the MVP.
+Decided (D-005): every §2 feature is `R1`. The owner may narrow the MVP later by recording a new decision. Anything not listed in `REQUIREMENTS.md` §2 is **not** in the MVP.
 
 ## 7. Non-goals
 

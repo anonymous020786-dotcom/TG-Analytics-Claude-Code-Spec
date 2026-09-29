@@ -1,7 +1,7 @@
 # CLAUDE.md — TG Analytics
 
 ## Mission
-Build a secure, scalable, fast, SEO-friendly Telegram public-channel analytics platform phase-by-phase.
+Build a secure, scalable, fast, SEO-friendly Telegram public channel and group analytics platform phase-by-phase.
 
 ## Mandatory rules
 - Read relevant documentation before coding.

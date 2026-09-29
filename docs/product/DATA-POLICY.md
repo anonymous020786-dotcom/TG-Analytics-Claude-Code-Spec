@@ -1,6 +1,6 @@
 # Data Policy
 
-Status: PHASE-00 draft. Rules marked **Default** are conservative defaults derived from the existing spec (PRD non-goals, CLAUDE.md, INTEGRATION.md, METRICS.md). The owner may change them via the listed OD. Rules marked **Decided** reflect a logged owner decision.
+Status: PHASE-00 accepted baseline. Rules marked **Default** are accepted for development and staging (D-006); they are conservative defaults derived from the existing spec (PRD non-goals, CLAUDE.md, INTEGRATION.md, METRICS.md). The owner may change them via the listed OD. Rules marked **Decided** reflect a logged owner decision.
 
 ## 1. Principles
 
