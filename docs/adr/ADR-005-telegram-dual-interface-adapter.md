@@ -26,3 +26,9 @@ The product needs public channel and group data (D-002) and a user-facing bot. T
 - Bot API only: has no general method to read the message history of public channels or groups the bot is not part of, so it does not meet the product scope. The exact limits are verified in PHASE-06.
 - MTProto only: the bot would need a separate path anyway.
 - Web scraping: forbidden by CLAUDE.md.
+
+## Update — PHASE-06 (2026-09-29)
+
+- Implemented in `@tga/adapter-telegram`. The Bot API backend uses plain `fetch` (no SDK dependency).
+- The capability map in code (`capabilities.ts`) mirrors `docs/telegram/CAPABILITY-MATRIX.md`. Unverified operations fail closed.
+- MTProto client library selection remains deferred until OD-003 (a dedicated account and `api_id`). The transport interface and mappers are ready and tested against documented payload shapes.

@@ -102,6 +102,25 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
+  packages/adapter-telegram:
+    dependencies:
+      '@tga/types':
+        specifier: workspace:*
+        version: link:../types
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.6
+        version: 24.13.6
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6)(jiti@2.7.0))
+
   packages/config:
     dependencies:
       pino:
