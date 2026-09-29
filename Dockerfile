@@ -20,6 +20,7 @@ COPY packages/adapter-telegram/package.json packages/adapter-telegram/
 COPY packages/validation/package.json packages/validation/
 COPY workers/discovery/package.json workers/discovery/
 COPY packages/queues/package.json packages/queues/
+COPY packages/analytics/package.json packages/analytics/
 COPY workers/metrics/package.json workers/metrics/
 COPY workers/metadata/package.json workers/metadata/
 COPY workers/scheduler/package.json workers/scheduler/

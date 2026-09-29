@@ -23,36 +23,39 @@ datasource db {
 // ---------------------------------------------------------------- Catalog
 
 model Channel {
-  id                    String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  id                       String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
   /// Stable Telegram ID: the canonical identity (DISCOVERY.md).
-  telegramId            BigInt    @unique @map("telegram_id")
+  telegramId               BigInt    @unique @map("telegram_id")
   /// channel | group
-  type                  String
+  type                     String
   /// Current public username, lowercase, without "@". Previous usernames live in channel_aliases.
-  username              String?   @unique
-  title                 String
-  description           String?
-  isVerified            Boolean   @default(false) @map("is_verified")
-  isScam                Boolean   @default(false) @map("is_scam")
+  username                 String?   @unique
+  title                    String
+  description              String?
+  isVerified               Boolean   @default(false) @map("is_verified")
+  isScam                   Boolean   @default(false) @map("is_scam")
   /// Latest observed subscriber/member count; history lives in the analytical store.
-  memberCount           BigInt?   @map("member_count")
-  memberCountObservedAt DateTime? @map("member_count_observed_at") @db.Timestamptz(6)
+  memberCount              BigInt?   @map("member_count")
+  memberCountObservedAt    DateTime? @map("member_count_observed_at") @db.Timestamptz(6)
   /// Telegram-side status (DATA-POLICY §6): active | not_public | deleted | inaccessible
-  status                String    @default("active")
+  status                   String    @default("active")
   /// Collection status (FR-DQ-01): pending | ok | failed
-  collectionStatus      String    @default("pending") @map("collection_status")
-  lastCollectedAt       DateTime? @map("last_collected_at") @db.Timestamptz(6)
+  collectionStatus         String    @default("pending") @map("collection_status")
+  lastCollectedAt          DateTime? @map("last_collected_at") @db.Timestamptz(6)
+  /// Failure class of the most recent failed collection (FR-DQ-01); cleared on success.
+  lastCollectionErrorClass String?   @map("last_collection_error_class")
   /// Observation time of the stored metadata; older observations never overwrite newer ones.
-  metadataObservedAt    DateTime? @map("metadata_observed_at") @db.Timestamptz(6)
+  metadataObservedAt       DateTime? @map("metadata_observed_at") @db.Timestamptz(6)
   /// Set when a moderator hides the entity (FR-MOD-01).
-  hiddenAt              DateTime? @map("hidden_at") @db.Timestamptz(6)
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  hiddenAt                 DateTime? @map("hidden_at") @db.Timestamptz(6)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   aliases         ChannelAlias[]
   categories      ChannelCategory[]
   posts           Post[]
   metricSnapshots ChannelMetricSnapshot[]
+  anomalies       MetricAnomaly[]
 
   @@map("channels")
 }
@@ -169,6 +172,28 @@ model PostMetricSnapshot {
 
   @@unique([postId, metric, observedAt])
   @@map("post_metric_snapshots")
+}
+
+/// Suspicious observations (PHASE-10). The snapshot itself is kept unchanged; this only flags it.
+model MetricAnomaly {
+  id             String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  channelId      String   @map("channel_id") @db.Uuid
+  channel        Channel  @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  metric         String
+  /// observed_at of the flagged snapshot.
+  observedAt     DateTime @map("observed_at") @db.Timestamptz(6)
+  /// drop_to_zero | large_increase | large_decrease
+  rule           String
+  previousValue  BigInt   @map("previous_value")
+  value          BigInt
+  relativeChange Float    @map("relative_change")
+  detectedAt     DateTime @default(now()) @map("detected_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([channelId, metric, observedAt, rule])
+  @@index([detectedAt])
+  @@map("metric_anomalies")
 }
 
 // ---------------------------------------------------------------- Job ledger (ADR-004, ADR-006)

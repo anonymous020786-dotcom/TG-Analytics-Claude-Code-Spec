@@ -1,6 +1,7 @@
 import { type Observed, TelegramError, type TelegramEntity } from '@tga/adapter-telegram';
 import type { ChannelRepository, UpsertResult } from '@tga/database';
 import { JobError } from '@tga/queues';
+import type { FailureClass } from '@tga/types';
 
 export interface EntitySource {
   resolvePublicEntity(username: string): Promise<Observed<TelegramEntity>>;
@@ -26,7 +27,8 @@ export async function refreshMetadata(deps: MetadataDeps, channelId: string): Pr
     observed = await deps.telegram.resolvePublicEntity(channel.username);
   } catch (error) {
     const rateLimited = (error as { failureClass?: unknown }).failureClass === 'rate_limited';
-    if (!rateLimited) await deps.channels.recordCollectionFailure(channelId);
+    const failureClass = (error as { failureClass?: FailureClass }).failureClass ?? 'unknown';
+    if (!rateLimited) await deps.channels.recordCollectionFailure(channelId, failureClass);
     if (error instanceof TelegramError && (error.code === 'chat_not_found' || error.code === 'not_public')) {
       await deps.channels.markStatus(channelId, error.code === 'not_public' ? 'not_public' : 'inaccessible');
     }
