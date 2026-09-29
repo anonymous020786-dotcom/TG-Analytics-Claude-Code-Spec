@@ -38,6 +38,7 @@ Discovery only accepts `DISCOVERY_ALLOWLIST` (default `telegram,durov,bottalk`; 
 S="docker compose -f docker-compose.staging.yml exec"
 $S worker-discovery node workers/discovery/dist/discover-cli.js telegram --actor <you>
 $S worker-scheduler node workers/scheduler/dist/flags-cli.js set slice.channel-page on --actor <you>
+$S worker-scheduler node workers/scheduler/dist/flags-cli.js set search.public on --actor <you>   # PHASE-12
 ```
 
 ## Verify

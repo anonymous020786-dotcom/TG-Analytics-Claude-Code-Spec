@@ -76,7 +76,7 @@ Workers also read `LOG_LEVEL`, `APP_ENV` and `DATABASE_URL`.
 
 The scheduler also reads `DATABASE_URL` and `LOG_LEVEL`.
 
-`workers/ranking` reads `DATABASE_URL`, `REDIS_URL`, `QUEUE_PREFIX`, `WORKER_CONCURRENCY` and `LOG_LEVEL`. It never calls Telegram.
+`workers/ranking` and `workers/search` read `DATABASE_URL`, `REDIS_URL`, `QUEUE_PREFIX`, `WORKER_CONCURRENCY` and `LOG_LEVEL`. They never call Telegram.
 
 ### Vertical slice variables (PHASE-11A)
 
@@ -87,6 +87,10 @@ The scheduler also reads `DATABASE_URL` and `LOG_LEVEL`.
 | `API_INTERNAL_URL` | web (server only) | API base URL for server-side rendering; never sent to browsers | `http://127.0.0.1:3001` | no |
 
 Feature flag `slice.channel-page` (default off) gates the endpoint and page: `pnpm --filter @tga/worker-scheduler flags:local set slice.channel-page on --actor <operator-id>`.
+
+### Search (PHASE-12)
+
+No new variables. Feature flag `search.public` (default off) gates `GET /api/v1/channels` and `GET /api/v1/search/suggest`: `pnpm --filter @tga/worker-scheduler flags:local set search.public on --actor <operator-id>`. Engine and relevance: ADR-015.
 
 ### Staging variables (PHASE-11B)
 

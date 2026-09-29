@@ -209,6 +209,17 @@ export class ChannelRepository {
   }
 
   /** Record a Telegram-side status change without touching history (DATA-POLICY §6). */
+  /** Channel plus its previous usernames (most recent first) for the search index (PHASE-12). */
+  async searchSource(channelId: string): Promise<{ channel: Channel; aliases: string[] } | null> {
+    const channel = await this.db.channel.findUnique({
+      where: { id: channelId },
+      include: { aliases: { orderBy: { lastSeenAt: 'desc' }, take: 20, select: { username: true } } },
+    });
+    if (!channel) return null;
+    const { aliases, ...rest } = channel;
+    return { channel: rest, aliases: aliases.map((a) => a.username).filter((u) => u !== channel.username) };
+  }
+
   async markStatus(channelId: string, status: ChannelStatus): Promise<void> {
     await this.db.channel.update({ where: { id: channelId }, data: { status } });
   }

@@ -1,6 +1,6 @@
 import { type Observed, TelegramError, type TelegramEntity } from '@tga/adapter-telegram';
-import type { ChannelRepository, UpsertResult } from '@tga/database';
-import { JobError } from '@tga/queues';
+import type { ChannelRepository, JobRepository, UpsertResult } from '@tga/database';
+import { JobError, QUEUES } from '@tga/queues';
 import type { FailureClass } from '@tga/types';
 
 export interface EntitySource {
@@ -10,6 +10,8 @@ export interface EntitySource {
 export interface MetadataDeps {
   channels: ChannelRepository;
   telegram: EntitySource;
+  /** When set, a metadata change schedules a search reindex (PHASE-12). */
+  jobs?: Pick<JobRepository, 'enqueue'>;
 }
 
 /**
@@ -41,7 +43,7 @@ export async function refreshMetadata(deps: MetadataDeps, channelId: string): Pr
     throw new JobError('permanent', 'username_reassigned', 'Stored username now belongs to a different Telegram entity');
   }
 
-  return deps.channels.upsertFromTelegram({
+  const result = await deps.channels.upsertFromTelegram({
     telegramId: entity.telegramId,
     type: entity.type,
     username: entity.username,
@@ -51,4 +53,17 @@ export async function refreshMetadata(deps: MetadataDeps, channelId: string): Pr
     ...(entity.isScam === undefined ? {} : { isScam: entity.isScam }),
     observedAt: observed.observedAt,
   });
+  if (deps.jobs && !result.stale) {
+    // One reindex per metadata version; retries of this job reuse the same key.
+    await deps.jobs.enqueue({
+      queue: QUEUES.search,
+      type: 'metadata',
+      idempotencyKey: `metadata:${channelId}:${observed.observedAt.toISOString()}`,
+      payloadVersion: 1,
+      payload: { channelId },
+      entityId: channelId,
+      maxAttempts: 5,
+    });
+  }
+  return result;
 }

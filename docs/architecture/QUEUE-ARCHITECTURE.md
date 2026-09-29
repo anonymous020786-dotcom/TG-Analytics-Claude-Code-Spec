@@ -72,7 +72,7 @@ Retry limits and backoff parameters are configuration with a mandatory maximum, 
   - `rate_limited` requeues at the provider-given time without consuming an attempt, capped at 20 reschedules.
   - Every other class is recorded as `failed`.
   - Backoff, DLQ, stuck-`running` recovery and re-drive are PHASE-09.
-- **Consumers:** `workers/discovery` (`channel.discovery`), `workers/metadata` (`channel.metadata`), `workers/metrics` (`channel.metrics`). `channel.posts` waits for OD-003; `search.index` waits for PHASE-12. Those jobs stay queued in the ledger.
+- **Consumers:** `workers/discovery` (`channel.discovery`), `workers/metadata` (`channel.metadata`), `workers/metrics` (`channel.metrics`). `workers/search` (`search.index`, PHASE-12; also queued by `channel.metadata` once per metadata version). `channel.posts` waits for OD-003; those jobs stay queued in the ledger.
 - **Lifecycle:** typed config (`workerConfigShape`), bounded concurrency, graceful shutdown on SIGTERM/SIGINT (in-flight jobs finish, then connections close; 30 s cap).
 
 ## 7. Reliability (PHASE-09, ADR-012)

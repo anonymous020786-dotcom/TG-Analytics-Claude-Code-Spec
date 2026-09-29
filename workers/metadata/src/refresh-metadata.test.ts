@@ -1,5 +1,5 @@
 import { type Observed, TelegramError, type TelegramEntity } from '@tga/adapter-telegram';
-import { ChannelRepository, createDatabase } from '@tga/database';
+import { ChannelRepository, createDatabase, JobRepository } from '@tga/database';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type EntitySource, refreshMetadata } from './refresh-metadata';
 
@@ -7,6 +7,7 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test')) throw new Error('TEST_DATABASE_URL (*_test) is required');
 const db = createDatabase({ url, poolMax: 2 });
 const channels = new ChannelRepository(db);
+const jobs = new JobRepository(db);
 
 const t0 = new Date('2026-09-29T00:00:00Z');
 const t1 = new Date('2026-09-29T06:00:00Z');
@@ -25,7 +26,7 @@ async function seed() {
   return (await channels.upsertFromTelegram({ ...base, observedAt: t0 })).channel;
 }
 
-beforeEach(() => db.$executeRawUnsafe('TRUNCATE channel_aliases, channels RESTART IDENTITY CASCADE'));
+beforeEach(() => db.$executeRawUnsafe('TRUNCATE jobs, channel_aliases, channels RESTART IDENTITY CASCADE'));
 afterAll(() => db.$disconnect());
 
 describe('refreshMetadata', () => {
@@ -48,5 +49,21 @@ describe('refreshMetadata', () => {
     const priv = new TelegramError('permanent', 'not_public', 'x');
     await expect(refreshMetadata({ channels, telegram: source(priv) }, c.id)).rejects.toBe(priv);
     expect(await channels.findById(c.id)).toMatchObject({ status: 'not_public', collectionStatus: 'failed' });
+  });
+
+  it('schedules one search reindex per metadata version (idempotent on retry)', async () => {
+    const c = await seed();
+    await refreshMetadata({ channels, telegram: source({ ...base, title: 'Renamed' }), jobs }, c.id);
+    await refreshMetadata({ channels, telegram: source({ ...base, title: 'Renamed' }), jobs }, c.id);
+    const queued = await db.job.findMany({ where: { queue: 'search.index' } });
+    expect(queued).toHaveLength(1);
+    expect(queued[0]).toMatchObject({ entityId: c.id, idempotencyKey: `metadata:${c.id}:${t1.toISOString()}` });
+  });
+
+  it('does not reindex when the observation is stale', async () => {
+    const c = await seed();
+    await channels.upsertFromTelegram({ ...base, title: 'Newer', observedAt: new Date(t1.getTime() + 60_000) });
+    await refreshMetadata({ channels, telegram: source(base), jobs }, c.id);
+    expect(await db.job.count({ where: { queue: 'search.index' } })).toBe(0);
   });
 });

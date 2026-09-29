@@ -33,7 +33,7 @@ Start as a modular monolith plus workers (ADR-001). Extract services only after 
 | C8 | Analytical store | Infrastructure | Datastore | Append-only historical snapshots behind the `AnalyticsStore` interface (ADR-002). PostgreSQL tables first; ClickHouse only when measured load justifies it (ADR-011) | — |
 | C9 | Redis | Infrastructure | Datastore | Cache, rate-limiter state, queue transport (ADR-006) | — |
 | C10 | Object storage | Infrastructure | Datastore | Export files and other generated artifacts; no copied Telegram media (DATA-POLICY §4) | — |
-| C11 | Search index | Infrastructure / adapter | Datastore | Entity search; engine chosen in PHASE-12 behind an adapter | — |
+| C11 | Search index | Infrastructure / adapter | Datastore | Entity search behind `SearchIndex`; PostgreSQL `pg_trgm` first (ADR-015), dedicated engine only if measurements require it | — |
 | C12 | External providers | Outside | Adapters | Telegram (Bot API, MTProto), payments, email | Only via `packages/*` adapters |
 
 Shared packages (`packages/*`) are libraries, not processes: `types`, `validation`, `database`, `analytics`, `queues`, `auth`, `security`, `logging`, `ui`. Their allowed dependencies are defined in SERVICE-BOUNDARIES.md.
