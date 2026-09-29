@@ -1,5 +1,5 @@
 # Local development stack. Ports bind to localhost only (DEPLOYMENT.md).
-# Redis is added with PHASE-08. PostgreSQL credentials come from .env (never committed). Variables: docs/operations/CONFIGURATION.md.
+# PostgreSQL and Redis credentials come from .env (never committed). Variables: docs/operations/CONFIGURATION.md.
 services:
   postgres:
     image: postgres:18-alpine
@@ -14,6 +14,22 @@ services:
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tga -d tga"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    environment:
+      # Empty value makes the container refuse to start: set it in .env.
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    command: ["sh", "-c", "test -n \"$REDIS_PASSWORD\" || { echo 'REDIS_PASSWORD is not set' >&2; exit 1; }; exec redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly yes"]
+    ports: ["127.0.0.1:6379:6379"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -41,3 +57,4 @@ services:
 
 volumes:
   pgdata:
+  redisdata:

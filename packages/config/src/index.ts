@@ -94,3 +94,4 @@ export function redactConfig<S extends z.ZodRawShape>(spec: ConfigSpec<S>, confi
   const secrets = new Set<string>(spec.secrets ?? []);
   return Object.fromEntries(Object.entries(config).map(([k, v]) => [k, secrets.has(k) ? '[REDACTED]' : v]));
 }
+export { workerConfigShape, workerSecrets } from './worker';

@@ -189,6 +189,8 @@ model Job {
   idempotencyKey String         @map("idempotency_key")
   traceId        String?        @map("trace_id")
   scheduledAt    DateTime       @default(now()) @map("scheduled_at") @db.Timestamptz(6)
+  /// Set when the dispatcher pushed the job to the transport (outbox); cleared on reschedule.
+  dispatchedAt   DateTime?      @map("dispatched_at") @db.Timestamptz(6)
   startedAt      DateTime?      @map("started_at") @db.Timestamptz(6)
   finishedAt     DateTime?      @map("finished_at") @db.Timestamptz(6)
   /// Failure class (QUEUE-ARCHITECTURE §3).

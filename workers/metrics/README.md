@@ -1,5 +1,3 @@
 # workers/metrics
 
-Metric collection worker.
-
-Implementation begins in the phase assigned to this component.
+`channel.metrics` collector (`@tga/worker-metrics`). Run locally: `pnpm --filter @tga/worker-metrics build && pnpm --filter @tga/worker-metrics start:local`. Configuration: CONFIGURATION.md (worker variables).

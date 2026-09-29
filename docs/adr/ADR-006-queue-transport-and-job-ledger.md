@@ -22,3 +22,9 @@ QUEUE-ARCHITECTURE.md requires durable queues, bounded retries, a DLQ and idempo
 
 - PostgreSQL-only queue: one fewer moving part, but more database load at high job volume.
 - A dedicated broker (e.g. RabbitMQ, Kafka): not justified without measured need (CLAUDE.md, ADR-001).
+
+## Update — PHASE-08 (2026-09-29)
+
+- Library: BullMQ 6.3.8 with ioredis on Redis 8 (newest releases passing the 7-day `minimumReleaseAge`).
+- Consistency between ledger and transport is handled with an outbox dispatcher (`dispatched_at` + `FOR UPDATE SKIP LOCKED` + stale re-dispatch) rather than dual writes. The ledger stays the source of truth and the transport can be rebuilt from it.
+- Remaining reconciliation (jobs stuck in `running` after a crash) is PHASE-09.

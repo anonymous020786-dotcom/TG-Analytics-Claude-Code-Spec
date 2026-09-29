@@ -1,5 +1,3 @@
 # workers/metadata
 
-Metadata collection worker.
-
-Implementation begins in the phase assigned to this component.
+`channel.metadata` collector (`@tga/worker-metadata`). Run locally: `pnpm --filter @tga/worker-metadata build && pnpm --filter @tga/worker-metadata start:local`. Configuration: CONFIGURATION.md (worker variables).

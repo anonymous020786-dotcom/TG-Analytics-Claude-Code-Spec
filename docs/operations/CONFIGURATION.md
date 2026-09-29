@@ -50,3 +50,17 @@ These are used by `packages/database` tooling and tests. Application processes a
 | `DATABASE_URL` | Prisma migrate commands | Target database | yes |
 | `SHADOW_DATABASE_URL` | `migrate dev`, `db:check` | Prisma shadow database | yes |
 | `TEST_DATABASE_URL` | integration tests | Must end in `_test`; wiped on every run | yes |
+
+### Redis and worker variables (PHASE-08)
+
+| Variable | Used by | Type / values | Default | Secret |
+|---|---|---|---|---|
+| `REDIS_PASSWORD` | docker-compose (local) | string | — | yes |
+| `REDIS_URL` | workers | `redis://:<password>@host:6379/<db>` | — | yes |
+| `TEST_REDIS_URL` | queue integration tests | Redis URL; tests use a unique key prefix per run | — | yes |
+| `QUEUE_PREFIX` | workers | `[a-z0-9-]{1,32}` | `tga` | no |
+| `WORKER_CONCURRENCY` | workers | integer 1–16 | `2` | no |
+| `TELEGRAM_BOT_TOKEN` | workers | Bot API token (dedicated, D-015) | — | yes |
+| `TELEGRAM_CREDENTIAL_ID` | workers | `[a-z0-9-]{1,32}` | `bot-1` | no |
+
+Workers also read `LOG_LEVEL`, `APP_ENV` and `DATABASE_URL`.
