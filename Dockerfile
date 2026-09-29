@@ -34,19 +34,17 @@ RUN pnpm --filter "@tga/api..." --filter "@tga/web" build
 FROM manifests AS api-deps
 RUN pnpm install --frozen-lockfile --prod --filter "@tga/api..."
 
+# Assemble production-only node_modules plus every workspace package's built dist/ (no sources,
+# no dev dependencies). Robust to new internal dependencies.
+FROM api-deps AS api-assemble
+COPY --from=build /repo/packages /tmp/packages
+COPY --from=build /repo/apps/api/dist /repo/apps/api/dist
+RUN for d in /tmp/packages/*/; do n=$(basename "$d"); if [ -d "$d/dist" ] && [ -d "/repo/packages/$n" ]; then cp -r "$d/dist" "/repo/packages/$n/"; fi; done && rm -rf /tmp/packages
+
 FROM node:24-alpine AS api
 ENV NODE_ENV=production PORT=3001
 WORKDIR /app
-COPY --from=api-deps --chown=node:node /repo/node_modules ./node_modules
-COPY --from=api-deps --chown=node:node /repo/apps/api/node_modules ./apps/api/node_modules
-COPY --from=api-deps --chown=node:node /repo/packages/logging/node_modules ./packages/logging/node_modules
-COPY --from=api-deps --chown=node:node /repo/packages/config/node_modules ./packages/config/node_modules
-COPY --from=build --chown=node:node /repo/packages/logging/package.json ./packages/logging/
-COPY --from=build --chown=node:node /repo/packages/logging/dist ./packages/logging/dist
-COPY --from=build --chown=node:node /repo/packages/config/package.json ./packages/config/
-COPY --from=build --chown=node:node /repo/packages/config/dist ./packages/config/dist
-COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/
-COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
+COPY --from=api-assemble --chown=node:node /repo /app
 USER node
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
