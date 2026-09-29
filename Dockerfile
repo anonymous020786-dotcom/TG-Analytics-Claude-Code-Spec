@@ -13,6 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/logging/package.json packages/logging/
+COPY packages/config/package.json packages/config/
 
 FROM manifests AS build
 RUN pnpm install --frozen-lockfile
@@ -28,8 +29,11 @@ WORKDIR /app
 COPY --from=api-deps --chown=node:node /repo/node_modules ./node_modules
 COPY --from=api-deps --chown=node:node /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=api-deps --chown=node:node /repo/packages/logging/node_modules ./packages/logging/node_modules
+COPY --from=api-deps --chown=node:node /repo/packages/config/node_modules ./packages/config/node_modules
 COPY --from=build --chown=node:node /repo/packages/logging/package.json ./packages/logging/
 COPY --from=build --chown=node:node /repo/packages/logging/dist ./packages/logging/dist
+COPY --from=build --chown=node:node /repo/packages/config/package.json ./packages/config/
+COPY --from=build --chown=node:node /repo/packages/config/dist ./packages/config/dist
 COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/
 COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
 USER node

@@ -60,6 +60,7 @@ Modules live inside the modular monolith (ADR-001). Each owns its tables and exp
 | `database` | `types`, `logging` | app code, provider SDKs |
 | `queues` | `types`, `validation`, `logging` | provider SDKs |
 | `ui` | `types` | server-only packages (`database`, `queues`, `auth`) |
+| `config` | nothing (external: `zod`) | app code; used only by process entry points to load and validate environment (PHASE-03) |
 | `apps/web` | `ui`, `types`, `validation` | `database`, `queues`, provider SDKs |
 | `apps/api`, `workers/*`, `apps/bot` | any `packages/*` | each other's process code |
 

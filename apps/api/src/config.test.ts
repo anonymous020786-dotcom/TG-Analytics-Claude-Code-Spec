@@ -1,0 +1,35 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parseEnv } from 'node:util';
+import { ConfigError } from '@tga/config';
+import { describe, expect, it } from 'vitest';
+import { apiConfigSpec, loadApiConfig } from './config';
+
+const exampleEnv = parseEnv(readFileSync(join(__dirname, '../../../.env.example'), 'utf8'));
+
+describe('api config', () => {
+  it('uses safe defaults when nothing is set', () => {
+    expect(loadApiConfig({})).toEqual({ APP_ENV: 'local', PORT: 3001, LOG_LEVEL: 'info' });
+  });
+
+  it('accepts .env.example as-is', () => {
+    expect(() => loadApiConfig(exampleEnv)).not.toThrow();
+  });
+
+  it('documents every api variable in .env.example', () => {
+    const documented = Object.keys(exampleEnv);
+    for (const key of ['APP_ENV', ...Object.keys(apiConfigSpec.shape)]) {
+      expect(documented).toContain(key);
+    }
+  });
+
+  it('keeps secrets out of .env.example', () => {
+    for (const key of apiConfigSpec.secrets ?? []) {
+      expect(exampleEnv[key] ?? '').toBe('');
+    }
+  });
+
+  it('rejects an invalid port and log level', () => {
+    expect(() => loadApiConfig({ PORT: '70000', LOG_LEVEL: 'verbose' })).toThrow(ConfigError);
+  });
+});
