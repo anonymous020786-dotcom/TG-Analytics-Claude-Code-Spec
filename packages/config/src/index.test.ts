@@ -11,7 +11,7 @@ const spec = defineConfig({
   secrets: ['DATABASE_URL'],
 });
 
-const SECRET = 'postgres://user:s3cr3t-value@db:5432/app';
+const SECRET = 'fake-database-url-for-tests';
 const noFiles = () => {
   throw new Error('no file access expected');
 };
