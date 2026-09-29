@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  DATABASE_DRIVERS,
   IO_MODULES,
   LIBRARY_RULES,
   PROVIDER_SDKS,
@@ -75,6 +76,9 @@ export function checkPackage(pkg) {
         out.push(`${label}: ${role.kind} "${role.name}" may not import ${mod}`);
       }
       return;
+    }
+    if (DATABASE_DRIVERS.includes(mod) && !(role.kind === 'library' && role.name === 'database')) {
+      out.push(`${label}: database driver "${mod}" may only be imported by packages/database`);
     }
     if (isProviderSdk(mod) && role.kind !== 'adapter') {
       out.push(`${label}: provider SDK "${mod}" may only be imported by packages/adapter-*`);

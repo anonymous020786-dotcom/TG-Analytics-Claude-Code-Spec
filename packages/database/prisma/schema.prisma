@@ -1,0 +1,239 @@
+// TG Analytics — transactional schema (PHASE-04, docs/database/POSTGRESQL.md, ERD.md).
+//
+// Conventions (ADR-010): snake_case tables/columns via @@map/@map; UUID v7 primary keys
+// from PostgreSQL 18's built-in uuidv7(); timestamptz everywhere; string statuses validated
+// by CHECK constraints (hand-written in migration SQL, not database enums); every FK indexed.
+// "channel" means a public channel OR public group (D-002).
+//
+// Tables owned by later phases (users, sessions, organizations, roles, permissions,
+// tracked_channels, alerts, alert_events, api_keys, api_usage, plans, subscriptions,
+// subscription_events, payments, invoices, coupons, entitlements, bot_users) are created by
+// their own phase's migration (D-013).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------- Catalog
+
+model Channel {
+  id                    String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Stable Telegram ID: the canonical identity (DISCOVERY.md).
+  telegramId            BigInt    @unique @map("telegram_id")
+  /// channel | group
+  type                  String
+  /// Current public username, lowercase, without "@". Previous usernames live in channel_aliases.
+  username              String?   @unique
+  title                 String
+  description           String?
+  isVerified            Boolean   @default(false) @map("is_verified")
+  isScam                Boolean   @default(false) @map("is_scam")
+  /// Latest observed subscriber/member count; history lives in the analytical store.
+  memberCount           BigInt?   @map("member_count")
+  memberCountObservedAt DateTime? @map("member_count_observed_at") @db.Timestamptz(6)
+  /// Telegram-side status (DATA-POLICY §6): active | not_public | deleted | inaccessible
+  status                String    @default("active")
+  /// Collection status (FR-DQ-01): pending | ok | failed
+  collectionStatus      String    @default("pending") @map("collection_status")
+  lastCollectedAt       DateTime? @map("last_collected_at") @db.Timestamptz(6)
+  /// Set when a moderator hides the entity (FR-MOD-01).
+  hiddenAt              DateTime? @map("hidden_at") @db.Timestamptz(6)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  aliases    ChannelAlias[]
+  categories ChannelCategory[]
+  posts      Post[]
+
+  @@map("channels")
+}
+
+model ChannelAlias {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  channelId   String   @map("channel_id") @db.Uuid
+  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  /// Lowercase, without "@".
+  username    String
+  firstSeenAt DateTime @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt  DateTime @map("last_seen_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Leading channel_id column also serves as the FK index.
+  @@unique([channelId, username])
+  @@index([username])
+  @@map("channel_aliases")
+}
+
+model Category {
+  id        String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug      String            @unique
+  name      String
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  channels  ChannelCategory[]
+
+  @@map("categories")
+}
+
+model ChannelCategory {
+  channelId  String   @map("channel_id") @db.Uuid
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  categoryId String   @map("category_id") @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@id([channelId, categoryId])
+  @@index([categoryId])
+  @@map("channel_categories")
+}
+
+model Post {
+  id                String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  channelId         String      @map("channel_id") @db.Uuid
+  channel           Channel     @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  telegramMessageId BigInt      @map("telegram_message_id")
+  postedAt          DateTime    @map("posted_at") @db.Timestamptz(6)
+  editedAt          DateTime?   @map("edited_at") @db.Timestamptz(6)
+  /// Channel posts only; group message text is never stored (DATA-POLICY §4, D-006).
+  text              String?
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  media             PostMedia[]
+
+  @@unique([channelId, telegramMessageId])
+  /// Cursor pagination: newest first within a channel.
+  @@index([channelId, postedAt(sort: Desc), id(sort: Desc)])
+  @@map("posts")
+}
+
+model PostMedia {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  position  Int
+  /// Media metadata only; files are never copied (DATA-POLICY §4).
+  mediaType String   @map("media_type")
+  mimeType  String?  @map("mime_type")
+  sizeBytes BigInt?  @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([postId, position])
+  @@map("post_media")
+}
+
+// ---------------------------------------------------------------- Job ledger (ADR-004, ADR-006)
+
+model Job {
+  id             String         @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  queue          String
+  type           String
+  entityId       String?        @map("entity_id")
+  payloadVersion Int            @map("payload_version")
+  /// Versioned job payload: IDs only, never secrets (QUEUE-ARCHITECTURE §2).
+  payload        Json           @db.JsonB
+  priority       Int            @default(0)
+  /// queued | running | succeeded | failed | dead
+  status         String         @default("queued")
+  attempt        Int            @default(0)
+  maxAttempts    Int            @map("max_attempts")
+  idempotencyKey String         @map("idempotency_key")
+  traceId        String?        @map("trace_id")
+  scheduledAt    DateTime       @default(now()) @map("scheduled_at") @db.Timestamptz(6)
+  startedAt      DateTime?      @map("started_at") @db.Timestamptz(6)
+  finishedAt     DateTime?      @map("finished_at") @db.Timestamptz(6)
+  /// Failure class (QUEUE-ARCHITECTURE §3).
+  lastErrorClass String?        @map("last_error_class")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  attempts       JobAttempt[]
+  deadLetter     DeadLetterJob?
+
+  @@unique([queue, idempotencyKey])
+  @@index([queue, status, scheduledAt])
+  @@index([entityId])
+  @@map("jobs")
+}
+
+model JobAttempt {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  jobId        String    @map("job_id") @db.Uuid
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  attempt      Int
+  startedAt    DateTime  @map("started_at") @db.Timestamptz(6)
+  finishedAt   DateTime? @map("finished_at") @db.Timestamptz(6)
+  /// succeeded | failed (null while running)
+  outcome      String?
+  errorClass   String?   @map("error_class")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([jobId, attempt])
+  @@map("job_attempts")
+}
+
+model DeadLetterJob {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  jobId        String    @unique @map("job_id") @db.Uuid
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  errorClass   String    @map("error_class")
+  errorMessage String?   @map("error_message")
+  deadAt       DateTime  @default(now()) @map("dead_at") @db.Timestamptz(6)
+  redrivenAt   DateTime? @map("redriven_at") @db.Timestamptz(6)
+  redrivenBy   String?   @map("redriven_by")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("dead_letter_jobs")
+}
+
+// ---------------------------------------------------------------- Administration
+
+/// Append-only: UPDATE and DELETE are blocked by a trigger (DATA-POLICY §5), so no updated_at.
+model AuditLog {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// system | user
+  actorType  String   @map("actor_type")
+  actorId    String?  @map("actor_id")
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  metadata   Json?    @db.JsonB
+  requestId  String?  @map("request_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([targetType, targetId])
+  @@index([actorType, actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       Json     @db.JsonB
+  description String?
+  updatedBy   String?  @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("system_settings")
+}
+
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("feature_flags")
+}

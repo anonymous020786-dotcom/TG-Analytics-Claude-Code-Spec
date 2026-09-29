@@ -14,6 +14,7 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/logging/package.json packages/logging/
 COPY packages/config/package.json packages/config/
+COPY packages/database/package.json packages/database/
 
 FROM manifests AS build
 RUN pnpm install --frozen-lockfile

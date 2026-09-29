@@ -1,5 +1,5 @@
 # packages/database
 
-Database clients, migrations and repositories.
+PostgreSQL access (`@tga/database`, ADR-010): Prisma schema and migrations, `createDatabase`, cursor pagination helpers and repositories (`ChannelRepository`, `PostRepository`, `JobRepository`, `AuditLogRepository`, `FeatureFlagRepository`).
 
-Implementation begins in the phase assigned to this component.
+This is the only package allowed to import database drivers. Operations guide: `docs/operations/DATABASE.md`.

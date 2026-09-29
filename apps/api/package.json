@@ -10,9 +10,9 @@
     "start:local": "node --env-file-if-exists=../../.env dist/main.js"
   },
   "dependencies": {
-    "@nestjs/common": "^12.1.0",
-    "@nestjs/core": "^12.1.0",
-    "@nestjs/platform-express": "^12.1.0",
+    "@nestjs/common": "^12.0.4",
+    "@nestjs/core": "^12.0.4",
+    "@nestjs/platform-express": "^12.0.4",
     "@tga/config": "workspace:*",
     "@tga/logging": "workspace:*",
     "reflect-metadata": "^0.2.2",
@@ -20,11 +20,11 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@nestjs/testing": "^12.1.0",
-    "@types/node": "^24.19.0",
+    "@nestjs/testing": "^12.0.4",
+    "@types/node": "^24.13.6",
     "@types/supertest": "^7.2.1",
-    "supertest": "^7.3.0",
+    "supertest": "^7.2.2",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.1"
   }
 }
