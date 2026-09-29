@@ -95,3 +95,4 @@ export function redactConfig<S extends z.ZodRawShape>(spec: ConfigSpec<S>, confi
   return Object.fromEntries(Object.entries(config).map(([k, v]) => [k, secrets.has(k) ? '[REDACTED]' : v]));
 }
 export { workerConfigShape, workerSecrets } from './worker';
+export { schedulerConfigShape, schedulerSecrets } from './scheduler';

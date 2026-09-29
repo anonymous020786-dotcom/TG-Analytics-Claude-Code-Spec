@@ -43,3 +43,9 @@ pnpm db:migrate               # prisma migrate deploy against DATABASE_URL
 ## Analytical snapshots (PHASE-05)
 
 `channel_metric_snapshots` and `post_metric_snapshots` are append-only (UPDATE blocked by trigger). Access them only through `PostgresAnalyticsStore` (ADR-011). Deleting snapshots is reserved for the retention/removal policy (OD-004) and needs explicit approval.
+
+## Reliability tables (PHASE-09)
+
+- `jobs.lease_expires_at` is set while running and cleared on any outcome.
+- `leases` holds named expiring locks (scheduler singleton). Rows are small and self-expiring.
+- `dead_letter_jobs` has one row per job. A re-drive stamps `redriven_at`/`redriven_by`; dying again re-opens the row.

@@ -67,6 +67,25 @@ export interface JobContext<P> {
 
 export type JobHandler<P> = (ctx: JobContext<P>) => Promise<void>;
 
+export interface BackoffPolicy {
+  baseMs: number;
+  maxMs: number;
+}
+
+/** Provisional (OD-005): 30 s doubling per attempt, capped at 30 min. */
+export const DEFAULT_BACKOFF: BackoffPolicy = { baseMs: 30_000, maxMs: 1_800_000 };
+/** Lease on running jobs; heartbeats renew it at a third of its length. */
+export const JOB_LEASE_MS = 120_000;
+
+/**
+ * Exponential backoff with "equal jitter": between half and all of the capped delay, so
+ * retries spread out (no lockstep storms) but never retry immediately.
+ */
+export function computeBackoffMs(attempt: number, policy: BackoffPolicy = DEFAULT_BACKOFF, random: () => number = Math.random): number {
+  const exp = Math.min(policy.maxMs, policy.baseMs * 2 ** Math.max(0, Math.min(30, attempt - 1)));
+  return Math.floor(exp / 2 + (random() * exp) / 2);
+}
+
 export interface ConsumerRuntimeOptions<P> {
   ledger: JobLedger;
   transport: QueueTransport;
@@ -74,27 +93,39 @@ export interface ConsumerRuntimeOptions<P> {
   handler: JobHandler<P>;
   logger: Logger;
   concurrency?: number;
+  backoff?: BackoffPolicy;
+  leaseMs?: number;
 }
 
+export type ProcessOutcome = 'succeeded' | 'retry_scheduled' | 'failed' | 'dead' | 'rescheduled' | 'skipped';
+
 /**
- * Consumer: atomic queued → running start (duplicate deliveries are skipped), payload
- * validation, handler, then ledger outcome. Rate limits are rescheduled; every other
- * failure is recorded with its class (retry/DLQ policy: PHASE-09).
+ * Consumer: atomic queued → running start under a lease (duplicate deliveries skipped),
+ * heartbeats while the handler runs, payload validation, handler, then ledger outcome:
+ * rate limits rescheduled; retryable failures backed off; others failed or dead-lettered.
  */
 export class ConsumerRuntime<P> {
   private consumer: Consumer | undefined;
 
   constructor(private readonly options: ConsumerRuntimeOptions<P>) {}
 
-  async process(ledgerId: string): Promise<'succeeded' | 'failed' | 'rescheduled' | 'skipped'> {
+  async process(ledgerId: string): Promise<ProcessOutcome> {
     const { ledger, handler, logger, queue } = this.options;
-    const started = await ledger.startAttempt(ledgerId);
+    const leaseMs = this.options.leaseMs ?? JOB_LEASE_MS;
+    const started = await ledger.startAttempt(ledgerId, leaseMs);
     if (!started) {
       logger.debug({ jobId: ledgerId, queue }, 'job not runnable (duplicate delivery or finished); skipped');
       return 'skipped';
     }
     const { job, execution } = started;
     const log = logger.child({ jobId: job.id, queue: job.queue, execution, traceId: job.traceId ?? undefined });
+    const beat = setInterval(() => {
+      ledger.heartbeat(job.id, leaseMs).then(
+        (alive) => { if (!alive) log.warn('lease lost while running'); },
+        () => log.warn('heartbeat failed'),
+      );
+    }, Math.max(1_000, Math.floor(leaseMs / 3)));
+    beat.unref();
     try {
       const payload = parsePayload<P>(job.queue, job.payloadVersion, job.payload);
       await handler({ payload, job, execution });
@@ -108,11 +139,14 @@ export class ConsumerRuntime<P> {
       if (failureClass === 'rate_limited' && typeof retryAfterMs === 'number') {
         const outcome = await ledger.rescheduleAfterRateLimit(job.id, execution, retryAfterMs, message);
         log.warn({ retryAfterMs, outcome }, 'job rate limited');
-        return outcome === 'rescheduled' ? 'rescheduled' : 'failed';
+        return outcome === 'rescheduled' ? 'rescheduled' : 'dead';
       }
-      await ledger.failAttempt(job.id, execution, failureClass, message);
-      log.warn({ failureClass, message }, 'job failed');
-      return 'failed';
+      const delay = computeBackoffMs(job.attempt, this.options.backoff);
+      const outcome = await ledger.recordFailure(job.id, execution, failureClass, message, delay);
+      log.warn({ failureClass, message, outcome, ...(outcome === 'retry_scheduled' ? { retryInMs: delay } : {}) }, 'job failed');
+      return outcome;
+    } finally {
+      clearInterval(beat);
     }
   }
 
@@ -187,14 +221,56 @@ export interface RunQueueWorkerOptions<P> {
   release: () => Promise<void>;
 }
 
-/** Starts the dispatcher and consumer for one queue and installs graceful shutdown. */
-export function runQueueWorker<P>(options: RunQueueWorkerOptions<P>): { dispatcher: Dispatcher; consumer: ConsumerRuntime<P> } {
+export interface ReaperOptions {
+  ledger: JobLedger;
+  logger: Logger;
+  intervalMs?: number;
+  batchSize?: number;
+  backoff?: BackoffPolicy;
+}
+
+/** Lease reaper: recovers jobs whose worker died (PHASE-09). Safe to run in every process. */
+export class Reaper {
+  private timer: NodeJS.Timeout | undefined;
+  private running: Promise<unknown> | undefined;
+  private stopped = true;
+
+  constructor(private readonly options: ReaperOptions) {}
+
+  async tick(): Promise<number> {
+    const recovered = await this.options.ledger.recoverExpiredLeases(this.options.batchSize ?? 100, computeBackoffMs(1, this.options.backoff));
+    for (const r of recovered) this.options.logger.warn({ jobId: r.jobId, outcome: r.outcome }, 'recovered job with expired lease');
+    return recovered.length;
+  }
+
+  start(): void {
+    this.stopped = false;
+    const loop = async (): Promise<void> => {
+      if (this.stopped) return;
+      this.running = this.tick().catch((error: unknown) => this.options.logger.error({ err: errorName(error) }, 'reaper tick failed'));
+      await this.running;
+      if (!this.stopped) this.timer = setTimeout(() => void loop(), this.options.intervalMs ?? 30_000);
+    };
+    void loop();
+  }
+
+  async stop(): Promise<void> {
+    this.stopped = true;
+    if (this.timer) clearTimeout(this.timer);
+    await this.running;
+  }
+}
+
+/** Starts dispatcher, consumer and reaper for one queue and installs graceful shutdown. */
+export function runQueueWorker<P>(options: RunQueueWorkerOptions<P>): { dispatcher: Dispatcher; consumer: ConsumerRuntime<P>; reaper: Reaper } {
   const { ledger, transport, queue, handler, logger, concurrency, release } = options;
   const dispatcher = new Dispatcher({ ledger, transport, queues: [queue], logger });
   const consumer = new ConsumerRuntime<P>({ ledger, transport, queue, handler, logger, concurrency });
+  const reaper = new Reaper({ ledger, logger });
   dispatcher.start();
   consumer.start();
-  handleShutdown([dispatcher, consumer], release, logger);
+  reaper.start();
+  handleShutdown([dispatcher, consumer, reaper], release, logger);
   logger.info({ queue, concurrency }, 'worker started');
-  return { dispatcher, consumer };
+  return { dispatcher, consumer, reaper };
 }

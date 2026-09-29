@@ -64,3 +64,13 @@ These are used by `packages/database` tooling and tests. Application processes a
 | `TELEGRAM_CREDENTIAL_ID` | workers | `[a-z0-9-]{1,32}` | `bot-1` | no |
 
 Workers also read `LOG_LEVEL`, `APP_ENV` and `DATABASE_URL`.
+
+### Scheduler variables (PHASE-09)
+
+| Variable | Type / values | Default | Secret |
+|---|---|---|---|
+| `SCHEDULER_TICK_SECONDS` | integer 10–3600 | `60` | no |
+| `METRICS_REFRESH_MINUTES` | integer 5–10080 (provisional, OD-005) | `360` | no |
+| `METADATA_REFRESH_MINUTES` | integer 5–10080 (provisional, OD-005) | `1440` | no |
+
+The scheduler also reads `DATABASE_URL` and `LOG_LEVEL`.

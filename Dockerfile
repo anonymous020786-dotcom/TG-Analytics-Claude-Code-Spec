@@ -22,6 +22,7 @@ COPY workers/discovery/package.json workers/discovery/
 COPY packages/queues/package.json packages/queues/
 COPY workers/metrics/package.json workers/metrics/
 COPY workers/metadata/package.json workers/metadata/
+COPY workers/scheduler/package.json workers/scheduler/
 
 FROM manifests AS build
 RUN pnpm install --frozen-lockfile

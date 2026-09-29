@@ -150,6 +150,27 @@ export class ChannelRepository {
     await this.db.channel.updateMany({ where: { id: channelId }, data: { collectionStatus: 'failed' } });
   }
 
+  /**
+   * Scheduler input: ids of active, visible, public channels whose last successful
+   * collection of `kind` is older than `olderThan` (or never happened). Keyset-paginated.
+   */
+  async dueForCollection(kind: 'metrics' | 'metadata', olderThan: Date, afterId: string | undefined, limit: number): Promise<string[]> {
+    const field = kind === 'metrics' ? 'lastCollectedAt' : 'metadataObservedAt';
+    const rows = await this.db.channel.findMany({
+      where: {
+        status: 'active',
+        hiddenAt: null,
+        username: { not: null },
+        OR: [{ [field]: null }, { [field]: { lt: olderThan } }],
+        ...(afterId ? { id: { gt: afterId } } : {}),
+      },
+      orderBy: { id: 'asc' },
+      take: Math.min(Math.max(1, Math.trunc(limit)), 500),
+      select: { id: true },
+    });
+    return rows.map((r) => r.id);
+  }
+
   /** Record a Telegram-side status change without touching history (DATA-POLICY §6). */
   async markStatus(channelId: string, status: ChannelStatus): Promise<void> {
     await this.db.channel.update({ where: { id: channelId }, data: { status } });

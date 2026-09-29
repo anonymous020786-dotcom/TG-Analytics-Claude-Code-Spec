@@ -7,16 +7,16 @@
  * - Returned waits include jitter so rescheduled jobs do not retry in lockstep.
  * - A wait is never shorter than the provider-given delay.
  *
- * This implementation is per-process. A shared (Redis) implementation of the same
- * interface is added when workers scale out (PHASE-08/09).
+ * InMemoryRateLimiter is per-process (tests, single process). Workers share one budget
+ * per credential through RedisRateLimiter (PHASE-09).
  */
 
 export type Acquire = { ok: true } | { ok: false; retryAfterMs: number };
 
 export interface RateLimiter {
-  tryAcquire(key: string): Acquire;
+  tryAcquire(key: string): Promise<Acquire>;
   /** Record a provider rate-limit signal: block the key for at least `retryAfterMs`. */
-  penalize(key: string, retryAfterMs: number): void;
+  penalize(key: string, retryAfterMs: number): Promise<void>;
 }
 
 export interface TokenBucketOptions {
@@ -57,7 +57,7 @@ export class InMemoryRateLimiter implements RateLimiter {
     this.random = options.random ?? Math.random;
   }
 
-  tryAcquire(key: string): Acquire {
+  async tryAcquire(key: string): Promise<Acquire> {
     const now = this.now();
     const bucket = this.bucket(key, now);
     if (bucket.blockedUntil > now) return { ok: false, retryAfterMs: this.withJitter(bucket.blockedUntil - now) };
@@ -69,7 +69,7 @@ export class InMemoryRateLimiter implements RateLimiter {
     return { ok: false, retryAfterMs: this.withJitter(msUntilToken) };
   }
 
-  penalize(key: string, retryAfterMs: number): void {
+  async penalize(key: string, retryAfterMs: number): Promise<void> {
     const now = this.now();
     const bucket = this.bucket(key, now);
     bucket.blockedUntil = Math.max(bucket.blockedUntil, now + Math.max(0, retryAfterMs));

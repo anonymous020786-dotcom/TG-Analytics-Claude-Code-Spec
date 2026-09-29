@@ -16,7 +16,8 @@
     "@tga/logging": "workspace:*",
     "@tga/queues": "workspace:*",
     "@tga/types": "workspace:*",
-    "@tga/validation": "workspace:*"
+    "@tga/validation": "workspace:*",
+    "ioredis": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.6",

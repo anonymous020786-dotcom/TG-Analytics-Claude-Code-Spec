@@ -12,12 +12,15 @@ export { PostRepository, type ListPostsInput } from './repositories/posts';
 export {
   JobRepository,
   MAX_DISPATCH_BATCH,
+  DEFAULT_LEASE_MS,
   MAX_RATE_LIMIT_RESCHEDULES,
   type DispatchClaim,
+  type FailureOutcome,
   type EnqueueJobInput,
   type EnqueueResult,
   type StartedJob,
 } from './repositories/jobs';
+export { LeaseRepository } from './repositories/leases';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';
