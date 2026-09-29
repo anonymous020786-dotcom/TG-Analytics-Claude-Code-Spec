@@ -30,6 +30,7 @@
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "@tga/logging": "workspace:*",
+    "@tga/types": "workspace:*",
     "pg": "^8.23.0"
   },
   "devDependencies": {

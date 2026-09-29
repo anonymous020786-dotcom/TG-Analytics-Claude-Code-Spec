@@ -19,6 +19,7 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | D-011 | ADR-006 accepted: Redis-backed queue transport plus PostgreSQL job ledger (was OD-012). | 2026-09-29 | Library chosen in PHASE-02/08. |
 | D-012 | ADR-007 accepted: admin UI hosted in `apps/web` under `/admin` initially (was OD-013). | 2026-09-29 | `apps/admin` stays a placeholder. |
 | D-013 | PHASE-04 creates only tables whose columns the spec defines now: catalog (channels, channel_aliases, categories, channel_categories, posts, post_media), job ledger (jobs, job_attempts, dead_letter_jobs) and administration (audit_logs, system_settings, feature_flags). User, auth, tracking, API-key, billing and bot tables are created by their own phases (16, 17, 19, 20, 21, 23, 24, 25) with their own migrations. | 2026-09-29 | Avoids inventing columns; ADR-010. |
+| D-014 | Analytical storage starts on PostgreSQL behind the `AnalyticsStore` interface; ClickHouse only when measurements justify it. `ranking_snapshots` and `analytics_events` are created in PHASE-11, which produces them. | 2026-09-29 | ADR-011. |
 
 ## Open
 

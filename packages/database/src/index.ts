@@ -5,4 +5,5 @@ export { PostRepository, type ListPostsInput } from './repositories/posts';
 export { JobRepository, type EnqueueJobInput, type EnqueueResult } from './repositories/jobs';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
+export { PostgresAnalyticsStore } from './analytics-store';
 export type { AuditLog, Channel, ChannelAlias, Job, Post } from './generated/prisma/client';
