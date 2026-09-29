@@ -27,6 +27,9 @@ export const PAYLOAD_SCHEMAS: Partial<Record<QueueName, Record<number, z.ZodType
   [QUEUES.discovery]: { 1: z.object({ input: z.string().min(1).max(256) }).strict() },
   [QUEUES.metadata]: { 1: channelRef },
   [QUEUES.metrics]: { 1: channelRef },
+  [QUEUES.ranking]: {
+    1: z.object({ ranking: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(64), asOf: z.iso.datetime() }).strict(),
+  },
 };
 
 export class PayloadError extends Error {

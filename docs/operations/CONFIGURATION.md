@@ -72,5 +72,8 @@ Workers also read `LOG_LEVEL`, `APP_ENV` and `DATABASE_URL`.
 | `SCHEDULER_TICK_SECONDS` | integer 10–3600 | `60` | no |
 | `METRICS_REFRESH_MINUTES` | integer 5–10080 (provisional, OD-005) | `360` | no |
 | `METADATA_REFRESH_MINUTES` | integer 5–10080 (provisional, OD-005) | `1440` | no |
+| `RANKING_REFRESH_MINUTES` | integer 5–10080 (provisional, OD-005) | `60` | no |
 
 The scheduler also reads `DATABASE_URL` and `LOG_LEVEL`.
+
+`workers/ranking` reads `DATABASE_URL`, `REDIS_URL`, `QUEUE_PREFIX`, `WORKER_CONCURRENCY` and `LOG_LEVEL`. It never calls Telegram.

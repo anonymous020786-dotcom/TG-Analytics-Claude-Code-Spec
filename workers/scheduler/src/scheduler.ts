@@ -1,5 +1,5 @@
 import type { ChannelRepository, JobRepository, LeaseRepository } from '@tga/database';
-import type { QUEUES } from '@tga/queues';
+import { QUEUES } from '@tga/queues';
 
 export interface Schedule {
   queue: typeof QUEUES.metrics | typeof QUEUES.metadata;
@@ -24,6 +24,8 @@ export interface TickOptions {
   /** Upper bound of jobs enqueued per schedule per tick (bounded work). */
   maxPerTick?: number;
   maxAttempts?: number;
+  /** Rankings to (re)compute once per window (PHASE-11). */
+  rankings?: { keys: readonly string[]; intervalMs: number };
 }
 
 export interface TickResult {
@@ -73,6 +75,25 @@ export async function scheduleTick(deps: SchedulerDeps, options: TickOptions): P
       }
     }
     enqueued[schedule.queue] = count;
+  }
+
+  if (options.rankings) {
+    const window = Math.floor(now.getTime() / options.rankings.intervalMs);
+    // asOf is the window boundary, so every scheduler instance computes the same run key.
+    const asOf = new Date(window * options.rankings.intervalMs).toISOString();
+    let count = 0;
+    for (const key of options.rankings.keys) {
+      const { created } = await deps.jobs.enqueue({
+        queue: QUEUES.ranking,
+        type: 'scheduled',
+        idempotencyKey: `ranking:${key}:${window}`,
+        payloadVersion: 1,
+        payload: { ranking: key, asOf },
+        maxAttempts: options.maxAttempts ?? 5,
+      });
+      if (created) count += 1;
+    }
+    enqueued[QUEUES.ranking] = count;
   }
   return { acquired, enqueued };
 }

@@ -11,6 +11,7 @@
     "dlq:local": "node --env-file-if-exists=../../.env dist/redrive-cli.js"
   },
   "dependencies": {
+    "@tga/analytics": "workspace:*",
     "@tga/config": "workspace:*",
     "@tga/database": "workspace:*",
     "@tga/logging": "workspace:*",

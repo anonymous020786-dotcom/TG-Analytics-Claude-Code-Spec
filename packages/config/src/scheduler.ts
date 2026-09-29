@@ -10,6 +10,8 @@ export const schedulerConfigShape = {
   SCHEDULER_TICK_SECONDS: z.coerce.number().int().min(10).max(3_600).default(60),
   METRICS_REFRESH_MINUTES: z.coerce.number().int().min(5).max(10_080).default(360),
   METADATA_REFRESH_MINUTES: z.coerce.number().int().min(5).max(10_080).default(1_440),
+  /** Ranking recomputation window (PHASE-11; provisional, OD-005). */
+  RANKING_REFRESH_MINUTES: z.coerce.number().int().min(5).max(10_080).default(60),
 };
 
 export const schedulerSecrets = ['DATABASE_URL'] as const;
