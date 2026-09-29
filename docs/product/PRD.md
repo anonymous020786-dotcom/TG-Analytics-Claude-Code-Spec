@@ -59,6 +59,7 @@ Decided (D-005): every §2 feature is `R1`. The owner may narrow the MVP later b
 - Unauthorized data acquisition, including scraping in place of supported interfaces.
 - Fabricated, estimated-as-real or backfilled statistics; unavailable metrics stay unavailable (`docs/analytics/METRICS.md`).
 - Profiling, tracking or ranking individual Telegram users.
+- Using collected Telegram data to train, fine-tune or develop AI/ML models (Telegram API ToS 1.5; D-016).
 - Representing trending/rankings as official Telegram data (`docs/analytics/TRENDING.md`).
 - Mass thin programmatic SEO pages (`docs/web/SEO.md`).
 - Microservices/Kubernetes without measured need (ADR-001).
