@@ -55,3 +55,22 @@ Retry limits and backoff parameters are configuration with a mandatory maximum, 
 
 - Telegram-facing queues share the Telegram rate limiter across all worker instances (RATE-LIMITING.md).
 - Per-entity mutual exclusion (lock/lease) prevents two collectors writing the same entity concurrently (PHASE-09).
+
+## 6. Implementation (PHASE-08)
+
+- **Transport:** BullMQ 6.3.8 on Redis 8 (ADR-006), via `@tga/queues` `BullTransport`. Messages carry only the ledger id; BullMQ job id = ledger id; BullMQ retries are off (`attempts: 1`).
+- **Outbox dispatch:** producers write only the PostgreSQL ledger.
+  - `Dispatcher` claims due `queued` jobs with `FOR UPDATE SKIP LOCKED`, sets `dispatched_at` and pushes them.
+  - A claim older than 5 minutes that never started is dispatched again, which covers lost pushes.
+- **Execution:** `ConsumerRuntime.process` runs these steps:
+  1. atomic `queued → running` with `attempt < max_attempts` (duplicate deliveries are skipped);
+  2. a `job_attempts` row;
+  3. versioned payload validation (`PAYLOAD_SCHEMAS`, strict);
+  4. the handler;
+  5. the ledger outcome.
+- **Failures in PHASE-08:**
+  - `rate_limited` requeues at the provider-given time without consuming an attempt, capped at 20 reschedules.
+  - Every other class is recorded as `failed`.
+  - Backoff, DLQ, stuck-`running` recovery and re-drive are PHASE-09.
+- **Consumers:** `workers/discovery` (`channel.discovery`), `workers/metadata` (`channel.metadata`), `workers/metrics` (`channel.metrics`). `channel.posts` waits for OD-003; `search.index` waits for PHASE-12. Those jobs stay queued in the ledger.
+- **Lifecycle:** typed config (`workerConfigShape`), bounded concurrency, graceful shutdown on SIGTERM/SIGINT (in-flight jobs finish, then connections close; 30 s cap).

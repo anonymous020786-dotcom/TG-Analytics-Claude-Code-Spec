@@ -1,0 +1,25 @@
+{
+  "name": "@tga/worker-metrics",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/main.js",
+    "start:local": "node --env-file-if-exists=../../.env dist/main.js"
+  },
+  "dependencies": {
+    "@tga/adapter-telegram": "workspace:*",
+    "@tga/config": "workspace:*",
+    "@tga/database": "workspace:*",
+    "@tga/logging": "workspace:*",
+    "@tga/queues": "workspace:*",
+    "@tga/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.1"
+  }
+}

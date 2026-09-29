@@ -9,7 +9,15 @@ export {
   type UpsertResult,
 } from './repositories/channels';
 export { PostRepository, type ListPostsInput } from './repositories/posts';
-export { JobRepository, type EnqueueJobInput, type EnqueueResult } from './repositories/jobs';
+export {
+  JobRepository,
+  MAX_DISPATCH_BATCH,
+  MAX_RATE_LIMIT_RESCHEDULES,
+  type DispatchClaim,
+  type EnqueueJobInput,
+  type EnqueueResult,
+  type StartedJob,
+} from './repositories/jobs';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';

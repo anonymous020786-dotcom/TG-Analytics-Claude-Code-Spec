@@ -33,6 +33,7 @@ pnpm db:migrate               # prisma migrate deploy against DATABASE_URL
 
 - Integration tests run against `TEST_DATABASE_URL`. The harness **refuses any database whose name does not end in `_test`**, then drops the `public` schema and applies the real migrations.
 - CI provides an ephemeral `postgres:18-alpine` service with trust auth, so no password is in the repo.
+- Packages whose tests use the shared `*_test` database (`@tga/database`, `workers/*`) must not run concurrently, so the root `pnpm test` runs packages serially (`--workspace-concurrency=1`). Files within a package already run serially (`fileParallelism: false`).
 
 ## Pagination and limits
 

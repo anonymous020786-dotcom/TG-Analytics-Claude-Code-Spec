@@ -133,6 +133,23 @@ export class ChannelRepository {
     }
   }
 
+  /**
+   * Current member count + successful collection (DATA-FLOW §2 step 5). Only an observation
+   * newer than the stored one updates the count; returns false when it was stale.
+   */
+  async recordMemberCount(channelId: string, count: bigint, observedAt: Date): Promise<boolean> {
+    const { count: updated } = await this.db.channel.updateMany({
+      where: { id: channelId, OR: [{ memberCountObservedAt: null }, { memberCountObservedAt: { lt: observedAt } }] },
+      data: { memberCount: count, memberCountObservedAt: observedAt, lastCollectedAt: observedAt, collectionStatus: 'ok' },
+    });
+    return updated === 1;
+  }
+
+  /** Collection failed: record it; previous observations stay untouched (FR-DQ-02). */
+  async recordCollectionFailure(channelId: string): Promise<void> {
+    await this.db.channel.updateMany({ where: { id: channelId }, data: { collectionStatus: 'failed' } });
+  }
+
   /** Record a Telegram-side status change without touching history (DATA-POLICY §6). */
   async markStatus(channelId: string, status: ChannelStatus): Promise<void> {
     await this.db.channel.update({ where: { id: channelId }, data: { status } });

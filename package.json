@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r --if-present typecheck",
     "build": "pnpm -r --if-present build",
-    "test": "vitest run --config scripts/vitest.config.mjs && pnpm -r --if-present test",
+    "test": "vitest run --config scripts/vitest.config.mjs && pnpm -r --workspace-concurrency=1 --if-present test",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "audit": "pnpm audit --audit-level high",
     "ci": "pnpm lint && pnpm typecheck && pnpm check:boundaries && pnpm db:check && pnpm build && pnpm test && pnpm audit",
