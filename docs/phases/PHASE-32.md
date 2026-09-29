@@ -18,8 +18,7 @@ Create load scenarios and baseline latency/error/throughput.
 - Destructive production changes without explicit approval.
 
 ## Required References
-- `docs/operations/DEPLOYMENT.md`
-- `docs/operations/BACKUPS.md`
+- `docs/operations/TESTING.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

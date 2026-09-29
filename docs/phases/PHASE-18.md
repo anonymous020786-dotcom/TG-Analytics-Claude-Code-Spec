@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Implement protected dashboard pages and user-specific APIs.
+Include export request and export list for the dashboard; files are produced by `workers/exports` via `exports.generate` (P7).
 
 ## Out of Scope
 - Future phases.

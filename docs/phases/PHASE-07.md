@@ -19,6 +19,7 @@ Implement normalization, canonical identity, aliases, metadata mapping and sched
 
 ## Required References
 - `docs/telegram/DISCOVERY.md`
+- `docs/product/DATA-POLICY.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

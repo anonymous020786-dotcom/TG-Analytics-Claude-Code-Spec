@@ -19,6 +19,8 @@ Implement typed config validation and a safe .env.example.
 
 ## Required References
 - `CLAUDE.md`
+- `docs/security/SECURITY.md`
+- `docs/operations/DEPLOYMENT.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

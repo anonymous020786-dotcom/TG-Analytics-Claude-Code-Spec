@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Create workspace structure, shared configs, test harness, Docker and CI.
+Include a minimal CI pipeline (lint, typecheck, unit tests, build, secret scan, dependency audit), a minimal structured logger, a health endpoint and an automated import-boundary check per `SERVICE-BOUNDARIES.md` §4 (P3, P4).
 
 ## Out of Scope
 - Future phases.
@@ -19,6 +20,10 @@ Create workspace structure, shared configs, test harness, Docker and CI.
 
 ## Required References
 - `CLAUDE.md`
+- `docs/operations/TESTING.md`
+- `docs/operations/DEPLOYMENT.md`
+- `docs/adr/ADR-001-modular-monolith.md`
+- `docs/architecture/SERVICE-BOUNDARIES.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

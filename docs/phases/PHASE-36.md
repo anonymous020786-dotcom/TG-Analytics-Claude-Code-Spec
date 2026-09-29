@@ -18,7 +18,8 @@ Run final functionality/security/performance/SEO/UX/accessibility/ops gates.
 - Destructive production changes without explicit approval.
 
 ## Required References
-- `docs/operations/TESTING.md`
+- `docs/operations/PRODUCTION-READINESS.md`
+- `docs/operations/RELEASE-CHECKLIST.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

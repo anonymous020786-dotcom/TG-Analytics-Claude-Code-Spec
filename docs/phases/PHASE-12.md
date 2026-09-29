@@ -4,7 +4,7 @@
 Build search, autocomplete, filters, relevance and cursor pagination.
 
 ## Prerequisites
-Phase 11 must pass its acceptance gate.
+Phase 11B must pass its acceptance gate.
 
 ## Problem Statement
 Without this phase, the platform carries a specific correctness, security, scalability or operational risk. Implement the smallest production-safe solution that removes that risk.

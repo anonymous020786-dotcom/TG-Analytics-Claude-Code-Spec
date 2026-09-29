@@ -12,7 +12,7 @@ Source-of-truth engineering specification for a production-grade Telegram public
 7. Update documentation.
 8. Never claim completion without evidence.
 
-PHASE-00 through PHASE-37 are sequential gates.
+PHASE-00 through PHASE-37 (plus PHASE-05A, 11A, 11B) are sequential gates. Order and rationale: `docs/phases/PHASE-PLAN-PROPOSAL.md`.
 
 Core principle:
 Telegram supported interfaces -> ingestion workers -> durable queues -> normalized storage -> analytics -> search/API/cache -> web/dashboard/bot.

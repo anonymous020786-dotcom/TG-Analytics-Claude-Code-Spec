@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Implement structured logs, metrics, health endpoints and error tracking.
+Complete metrics, tracing and error tracking on top of the PHASE-02 baseline logger and health endpoint (P4).
 
 ## Out of Scope
 - Future phases.

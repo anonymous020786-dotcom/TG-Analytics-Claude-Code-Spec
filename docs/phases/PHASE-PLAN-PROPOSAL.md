@@ -1,6 +1,6 @@
 # Phase Plan Proposal
 
-Status: **Proposal (OD-011)**. No phase file has been changed. Written after PHASE-00 from an audit of `docs/phases/PHASE-00..37.md` against the rest of the spec.
+Status: **Adopted (D-010, 2026-09-29)** and applied to the phase files. Written after PHASE-00 from an audit of `docs/phases/PHASE-00..37.md` against the rest of the spec.
 
 ## 1. Findings
 
@@ -10,10 +10,10 @@ Evidence: the `## Required References` section of each phase file.
 
 | Phase | Currently references | Expected (based on topic) |
 |---|---|---|
-| 02 Repository Bootstrap | none | `operations/TESTING.md`, `operations/DEPLOYMENT.md` (Docker), `adr/ADR-001` |
-| 03 Environment Management | none | `security/SECURITY.md` (secret management), `operations/DEPLOYMENT.md` |
-| 16 Authentication | none | `security/SECURITY.md`, `security/ASVS-CHECKLIST.md` |
-| 17 RBAC | none | `security/SECURITY.md`, `security/ASVS-CHECKLIST.md`, `database/POSTGRESQL.md` |
+| 02 Repository Bootstrap | `CLAUDE.md` only | `operations/TESTING.md`, `operations/DEPLOYMENT.md` (Docker), `adr/ADR-001` |
+| 03 Environment Management | `CLAUDE.md` only | `security/SECURITY.md` (secret management), `operations/DEPLOYMENT.md` |
+| 16 Authentication | `CLAUDE.md` only | `security/SECURITY.md`, `security/ASVS-CHECKLIST.md` |
+| 17 RBAC | `CLAUDE.md` only | `security/SECURITY.md`, `security/ASVS-CHECKLIST.md`, `database/POSTGRESQL.md` |
 | 24 Billing | `operations/DEPLOYMENT.md` | `security/SECURITY.md` (webhook spoofing, payment fraud), `database/POSTGRESQL.md` |
 | 30 Staging | `operations/TESTING.md` | `operations/DEPLOYMENT.md`, `operations/TESTING.md` |
 | 31 Production | `operations/DEPLOYMENT.md` | `operations/DEPLOYMENT.md`, `operations/BACKUPS.md`, `operations/OBSERVABILITY.md` |
