@@ -26,4 +26,6 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | OD-006 | Plans/tiers and their limits (watchlist size, alert count, history depth, API quota, exports). | PHASE-24 | Personas only name Free/Registered, Pro/business, API. |
 | OD-007 | Payment provider(s). | PHASE-24 | Provider-agnostic abstraction required regardless. |
 | OD-008 | SEO indexation threshold (what makes an entity page "meaningful/current enough"). | PHASE-14 | Pages below threshold `noindex`. |
-| OD-011 | Adopt the phase-plan changes in `docs/phases/PHASE-PLAN-PROPOSAL.md`? | PHASE-01 | Proposal only; phase files unchanged. |
+| OD-011 | Adopt the phase-plan changes in `docs/phases/PHASE-PLAN-PROPOSAL.md`? | PHASE-02 | Not adopted for PHASE-01 (unanswered at start); phase files unchanged. |
+| OD-012 | Accept ADR-006: Redis-backed queue transport plus PostgreSQL job ledger? | PHASE-02 | Proposed; library chosen in PHASE-02/08. |
+| OD-013 | Accept ADR-007: admin UI hosted in `apps/web` under `/admin` initially? | PHASE-13 | Proposed; spec permits it (`apps/admin/README.md`). |
