@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Map web/API/workers/bot/data/queue boundaries and record material decisions as ADRs.
+Produce an initial threat model in `docs/security/THREAT-MODEL.md` format (P6).
 
 ## Out of Scope
 - Future phases.

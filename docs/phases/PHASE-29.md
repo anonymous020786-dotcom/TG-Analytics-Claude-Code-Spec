@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Automate lint/typecheck/tests/security/build/container/staging gates.
+Extend the PHASE-02 CI pipeline with container, staging and release gates (P3).
 
 ## Out of Scope
 - Future phases.

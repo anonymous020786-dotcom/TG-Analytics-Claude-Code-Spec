@@ -18,7 +18,7 @@ Perform controlled restore drills and document recovery gaps.
 - Destructive production changes without explicit approval.
 
 ## Required References
-- `docs/operations/TESTING.md`
+- `docs/operations/BACKUPS.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

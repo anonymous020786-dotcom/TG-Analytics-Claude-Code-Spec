@@ -1,12 +1,12 @@
 # ADR-007 — Admin UI Hosted in the Web Application Initially
 
-Status: Proposed (OD-013)
+Status: Accepted (D-012, 2026-09-29)
 
 ## Context
 
 `apps/admin/README.md` states the admin UI "may initially share the web application if documented". ROUTES.md lists `/admin/*` alongside public and dashboard routes.
 
-## Decision (proposed)
+## Decision
 
 - Admin pages are served by `apps/web` under `/admin`. `apps/admin` remains a placeholder.
 - Every admin action is authorized server-side by the API (RBAC, PHASE-17). Hiding UI elements is not a control.

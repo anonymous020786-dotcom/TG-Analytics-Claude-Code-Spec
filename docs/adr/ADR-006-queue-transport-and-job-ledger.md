@@ -1,12 +1,12 @@
 # ADR-006 — Queue Transport and Durable Job Ledger
 
-Status: Proposed (OD-012)
+Status: Accepted (D-011, 2026-09-29)
 
 ## Context
 
 QUEUE-ARCHITECTURE.md requires durable queues, bounded retries, a DLQ and idempotent jobs. ADR-004 requires durable job status. POSTGRESQL.md already defines `jobs`, `job_attempts` and `dead_letter_jobs`. DEPLOYMENT.md's initial topology includes Redis, and no other queue broker.
 
-## Decision (proposed)
+## Decision
 
 - **Transport:** a Redis-backed job queue library for the Node.js/TypeScript stack, running on the Redis already in the deployment. The specific library is chosen in PHASE-02/08.
 - **Ledger:** PostgreSQL `jobs` / `job_attempts` / `dead_letter_jobs` is the durable record of job status, attempts and DLQ, written in the same transaction as the business side effect where possible.

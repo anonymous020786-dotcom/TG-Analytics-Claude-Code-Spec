@@ -19,6 +19,7 @@ Implement admin views, privileged actions, confirmations and audit.
 
 ## Required References
 - `docs/security/SECURITY.md`
+- `docs/adr/ADR-007-admin-hosted-in-web-app.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

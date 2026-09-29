@@ -18,7 +18,8 @@ Implement payment provider abstraction, checkout, verified webhooks and subscrip
 - Destructive production changes without explicit approval.
 
 ## Required References
-- `docs/operations/DEPLOYMENT.md`
+- `docs/security/SECURITY.md`
+- `docs/database/POSTGRESQL.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

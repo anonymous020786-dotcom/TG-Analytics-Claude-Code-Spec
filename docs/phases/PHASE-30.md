@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Deploy isolated staging, seed safe data and run smoke tests.
+Harden and seed the minimal staging environment created in PHASE-11B (P9).
 
 ## Out of Scope
 - Future phases.
@@ -18,6 +19,7 @@ Deploy isolated staging, seed safe data and run smoke tests.
 - Destructive production changes without explicit approval.
 
 ## Required References
+- `docs/operations/DEPLOYMENT.md`
 - `docs/operations/TESTING.md`
 
 ## Implementation Steps

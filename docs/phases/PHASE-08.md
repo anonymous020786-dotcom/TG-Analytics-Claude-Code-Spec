@@ -19,6 +19,8 @@ Implement specialized collectors, durable jobs, persistence and worker lifecycle
 
 ## Required References
 - `docs/architecture/QUEUE-ARCHITECTURE.md`
+- `docs/adr/ADR-006-queue-transport-and-job-ledger.md`
+- `docs/product/DATA-POLICY.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

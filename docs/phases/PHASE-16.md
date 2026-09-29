@@ -19,6 +19,8 @@ Implement registration/login/logout, verification, reset and secure sessions.
 
 ## Required References
 - `CLAUDE.md`
+- `docs/security/SECURITY.md`
+- `docs/security/ASVS-CHECKLIST.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

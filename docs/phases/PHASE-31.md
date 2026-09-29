@@ -19,6 +19,8 @@ Deploy production with private internal services, TLS, backups, monitoring and r
 
 ## Required References
 - `docs/operations/DEPLOYMENT.md`
+- `docs/operations/BACKUPS.md`
+- `docs/operations/OBSERVABILITY.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

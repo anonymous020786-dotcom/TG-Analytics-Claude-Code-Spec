@@ -18,7 +18,8 @@ Profile and optimize measured bottlenecks, then rerun benchmarks.
 - Destructive production changes without explicit approval.
 
 ## Required References
-- `docs/operations/BACKUPS.md`
+- `docs/operations/OBSERVABILITY.md`
+- `docs/operations/TESTING.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

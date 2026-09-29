@@ -19,6 +19,9 @@ Implement roles, permissions, guards, object-level authorization and audit.
 
 ## Required References
 - `CLAUDE.md`
+- `docs/security/SECURITY.md`
+- `docs/security/ASVS-CHECKLIST.md`
+- `docs/database/POSTGRESQL.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

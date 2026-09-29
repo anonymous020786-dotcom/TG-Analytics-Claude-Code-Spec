@@ -19,6 +19,7 @@ Implement validation, freshness state, anomaly detection and collection status.
 
 ## Required References
 - `docs/analytics/METRICS.md`
+- `docs/product/DATA-POLICY.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

@@ -4,7 +4,7 @@
 Create a supported Telegram integration boundary with rate limiting and error classification.
 
 ## Prerequisites
-Phase 05 must pass its acceptance gate.
+Phase 05A must pass its acceptance gate.
 
 ## Problem Statement
 Without this phase, the platform carries a specific correctness, security, scalability or operational risk. Implement the smallest production-safe solution that removes that risk.
@@ -20,6 +20,8 @@ Implement adapter, timeouts, bounded retries, rate limiter and error classifier.
 ## Required References
 - `docs/telegram/INTEGRATION.md`
 - `docs/telegram/RATE-LIMITING.md`
+- `docs/adr/ADR-005-telegram-dual-interface-adapter.md`
+- `docs/product/DATA-POLICY.md`
 
 ## Implementation Steps
 1. Read `CLAUDE.md` and the required references.

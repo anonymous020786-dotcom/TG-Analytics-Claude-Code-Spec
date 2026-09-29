@@ -15,6 +15,9 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | D-007 | Numeric NFR targets are set just-in-time, before the phase that verifies each one; none are invented earlier (was OD-005 timing). | 2026-09-29 | OD-005 remains open per target. |
 | D-008 | Phase gates are approved by the repository owner (was OD-009). | 2026-09-29 | — |
 | D-009 | For documentation-only phases (00, 01), lint/typecheck/build/test gates are recorded as N/A with reasons; documentation checks (traceability, markdown lint, secret scan, scope diff) are used instead (was OD-010). | 2026-09-29 | — |
+| D-010 | Phase-plan proposal adopted in full (was OD-011): references corrected, scopes extended (01, 02, 18, 27, 28, 29, 30), PHASE-05A/11A/11B added. | 2026-09-29 | `docs/phases/PHASE-PLAN-PROPOSAL.md` status Adopted. |
+| D-011 | ADR-006 accepted: Redis-backed queue transport plus PostgreSQL job ledger (was OD-012). | 2026-09-29 | Library chosen in PHASE-02/08. |
+| D-012 | ADR-007 accepted: admin UI hosted in `apps/web` under `/admin` initially (was OD-013). | 2026-09-29 | `apps/admin` stays a placeholder. |
 
 ## Open
 
@@ -26,6 +29,3 @@ Owner decisions that shape the product boundary. `D-xxx` = decided; `OD-xxx` = o
 | OD-006 | Plans/tiers and their limits (watchlist size, alert count, history depth, API quota, exports). | PHASE-24 | Personas only name Free/Registered, Pro/business, API. |
 | OD-007 | Payment provider(s). | PHASE-24 | Provider-agnostic abstraction required regardless. |
 | OD-008 | SEO indexation threshold (what makes an entity page "meaningful/current enough"). | PHASE-14 | Pages below threshold `noindex`. |
-| OD-011 | Adopt the phase-plan changes in `docs/phases/PHASE-PLAN-PROPOSAL.md`? | PHASE-02 | Not adopted for PHASE-01 (unanswered at start); phase files unchanged. |
-| OD-012 | Accept ADR-006: Redis-backed queue transport plus PostgreSQL job ledger? | PHASE-02 | Proposed; library chosen in PHASE-02/08. |
-| OD-013 | Accept ADR-007: admin UI hosted in `apps/web` under `/admin` initially? | PHASE-13 | Proposed; spec permits it (`apps/admin/README.md`). |

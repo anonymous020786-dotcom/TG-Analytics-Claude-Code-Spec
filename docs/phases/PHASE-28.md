@@ -11,6 +11,7 @@ Without this phase, the platform carries a specific correctness, security, scala
 
 ## Scope
 Run security review, dependency scans and abuse tests; remediate findings.
+Review and extend the PHASE-01 threat model (P6).
 
 ## Out of Scope
 - Future phases.
