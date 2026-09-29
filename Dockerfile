@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-# Multi-stage build for the TG Analytics workspace. Targets: api, web.
+# Multi-stage build for the TG Analytics workspace. Targets: api, web, worker, migrate.
+# pnpm store + metadata use BuildKit cache mounts so the supply-chain policy check and downloads
+# run once and are shared by every install stage (PHASE-11B).
 
 FROM node:24-alpine AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true
@@ -27,12 +29,14 @@ COPY workers/scheduler/package.json workers/scheduler/
 COPY workers/ranking/package.json workers/ranking/
 
 FROM manifests AS build
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \
+    pnpm install --frozen-lockfile --store-dir /pnpm/store --cache-dir /pnpm/cache
 COPY . .
-RUN pnpm --filter "@tga/api..." --filter "@tga/web" build
+RUN pnpm --filter "@tga/api..." --filter "@tga/web" --filter "@tga/worker-*..." build
 
 FROM manifests AS api-deps
-RUN pnpm install --frozen-lockfile --prod --filter "@tga/api..."
+RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \
+    pnpm install --frozen-lockfile --prod --filter "@tga/api..." --store-dir /pnpm/store --cache-dir /pnpm/cache
 
 # Assemble production-only node_modules plus every workspace package's built dist/ (no sources,
 # no dev dependencies). Robust to new internal dependencies.
@@ -59,3 +63,33 @@ COPY --from=build --chown=node:node /repo/apps/web/.next/static ./apps/web/.next
 USER node
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
+
+# ---------------------------------------------------------------- workers (PHASE-11B)
+# One recipe for every worker: docker build --target worker --build-arg WORKER=metrics .
+FROM manifests AS worker-deps
+ARG WORKER
+RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \
+    test -n "$WORKER" && pnpm install --frozen-lockfile --prod --filter "@tga/worker-${WORKER}..." --store-dir /pnpm/store --cache-dir /pnpm/cache
+
+FROM worker-deps AS worker-assemble
+ARG WORKER
+COPY --from=build /repo/packages /tmp/packages
+COPY --from=build /repo/workers /tmp/workers
+RUN cp -r "/tmp/workers/${WORKER}/dist" "/repo/workers/${WORKER}/"  && for d in /tmp/packages/*/; do n=$(basename "$d"); if [ -d "$d/dist" ] && [ -d "/repo/packages/$n" ]; then cp -r "$d/dist" "/repo/packages/$n/"; fi; done  && rm -rf /tmp/packages /tmp/workers
+
+FROM node:24-alpine AS worker
+ARG WORKER
+ENV NODE_ENV=production WORKER=${WORKER}
+WORKDIR /app
+COPY --from=worker-assemble --chown=node:node /repo /app
+USER node
+CMD ["sh", "-c", "exec node workers/$WORKER/dist/main.js"]
+
+# ---------------------------------------------------------------- migrations (PHASE-11B)
+# One-shot job: prisma migrate deploy. Needs the Prisma CLI (dev dependency), so it is built
+# from the full build stage and never used as a long-running service.
+FROM build AS migrate
+RUN chown -R node:node /repo/packages/database
+USER node
+WORKDIR /repo/packages/database
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]

@@ -39,3 +39,13 @@ docker compose up --build        # then open http://127.0.0.1:3000/channel/<user
 ```
 
 Run the discovery, metadata and metrics workers (`start:local`) to collect data. Details: `docs/phases/PHASE-11A-ACCEPTANCE.md`.
+
+### Staging (host-agnostic)
+
+```sh
+node scripts/staging/init-secrets.mjs                        # git-ignored staging/secrets/
+docker compose -f docker-compose.staging.yml up -d --build   # proxy on 127.0.0.1:8080
+node scripts/staging/smoke.mjs http://127.0.0.1:8080
+```
+
+Runbook: `docs/operations/STAGING.md`. Remote host and edge: OD-016.

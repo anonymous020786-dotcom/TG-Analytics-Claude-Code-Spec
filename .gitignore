@@ -26,3 +26,6 @@ next-env.d.ts
 
 # Prisma generated client (built by `prisma generate`)
 packages/database/src/generated/
+
+# Staging secrets (Docker secrets files) - never commit
+staging/secrets/

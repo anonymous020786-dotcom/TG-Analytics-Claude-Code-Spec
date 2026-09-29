@@ -4,9 +4,17 @@ import { ConfigError, defineConfig, loadConfig, redactConfig, workerConfigShape,
 import { ChannelRepository, createDatabase, JobRepository } from '@tga/database';
 import { createLogger } from '@tga/logging';
 import { BullTransport, QUEUES, runQueueWorker } from '@tga/queues';
+import { z } from 'zod';
 import { DiscoveryService } from './discovery-service';
 
-const spec = defineConfig({ shape: workerConfigShape, secrets: [...workerSecrets] });
+const spec = defineConfig({
+  shape: {
+    ...workerConfigShape,
+    /** Comma-separated usernames; when set, only these may be discovered (staging, PHASE-11B). */
+    DISCOVERY_ALLOWLIST: z.string().regex(/^([a-z][a-z0-9_]{3,31})(,[a-z][a-z0-9_]{3,31})*$/).optional(),
+  },
+  secrets: [...workerSecrets],
+});
 
 function main(): void {
   let config;
@@ -29,7 +37,9 @@ function main(): void {
     limiter: new RedisRateLimiter({ redis: limiterRedis, prefix: `${config.QUEUE_PREFIX}:ratelimit:`, ...DEFAULT_BOT_API_LIMIT }),
     credentialId: config.TELEGRAM_CREDENTIAL_ID,
   });
-  const discovery = new DiscoveryService(telegram, new ChannelRepository(db), new JobRepository(db));
+  const allowlist = config.DISCOVERY_ALLOWLIST ? new Set(config.DISCOVERY_ALLOWLIST.split(',')) : undefined;
+  if (allowlist) logger.info({ allowlisted: allowlist.size }, 'discovery allow-list active');
+  const discovery = new DiscoveryService(telegram, new ChannelRepository(db), new JobRepository(db), allowlist ? { allowlist } : {});
 
   runQueueWorker<{ input: string }>({
     ledger: new JobRepository(db),

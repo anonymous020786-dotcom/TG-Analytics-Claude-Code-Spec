@@ -1,0 +1,174 @@
+# Minimal staging (PHASE-11B, docs/operations/STAGING.md). Host-agnostic: runs on any Docker host.
+#   node scripts/staging/init-secrets.mjs           # once, creates staging/secrets/* (git-ignored)
+#   docker compose -f docker-compose.staging.yml up -d --build
+#
+# Networks: datastores are on an internal-only network (no internet, no published ports).
+# Only Telegram-facing workers get outbound internet. Only the proxy publishes a port.
+name: tga-staging
+
+x-hardened: &hardened
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+x-app-env: &app-env
+  APP_ENV: staging
+  LOG_LEVEL: info
+  QUEUE_PREFIX: tga-staging
+  DATABASE_URL_FILE: /run/secrets/database_url
+  REDIS_URL_FILE: /run/secrets/redis_url
+  TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram_bot_token
+  TELEGRAM_CREDENTIAL_ID: staging-bot
+
+x-after-migrate: &after-migrate
+  migrate:
+    condition: service_completed_successfully
+  redis:
+    condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: tga
+      POSTGRES_DB: tga
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [stg_pgdata:/var/lib/postgresql]
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tga -d tga"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$(cat /run/secrets/redis_password)\" --appendonly yes"]
+    secrets: [redis_password]
+    volumes: [stg_redisdata:/data]
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$(cat /run/secrets/redis_password)\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  migrate:
+    build: { context: ., target: migrate }
+    entrypoint: ["sh", "-c", "DATABASE_URL=\"$$(cat /run/secrets/database_url)\" exec node node_modules/prisma/build/index.js migrate deploy"]
+    secrets: [database_url]
+    networks: [data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *hardened
+    build: { context: ., target: api }
+    environment:
+      APP_ENV: staging
+      LOG_LEVEL: info
+      DATABASE_URL_FILE: /run/secrets/database_url
+    secrets: [database_url]
+    networks: [data, app]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    <<: *hardened
+    build: { context: ., target: web }
+    tmpfs: ["/app/apps/web/.next/cache"]
+    environment:
+      API_INTERNAL_URL: http://api:3001
+    networks: [app]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  worker-discovery:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: discovery } }
+    environment:
+      <<: *app-env
+      # Staging collects only this small allow-list (DATA-POLICY, PHASE-11B).
+      DISCOVERY_ALLOWLIST: ${STAGING_ALLOWLIST:-telegram,durov,bottalk}
+    secrets: [database_url, redis_url, telegram_bot_token]
+    networks: [data, egress]
+    depends_on: *after-migrate
+
+  worker-metadata:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: metadata } }
+    environment: *app-env
+    secrets: [database_url, redis_url, telegram_bot_token]
+    networks: [data, egress]
+    depends_on: *after-migrate
+
+  worker-metrics:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: metrics } }
+    environment: *app-env
+    secrets: [database_url, redis_url, telegram_bot_token]
+    networks: [data, egress]
+    depends_on: *after-migrate
+
+  worker-ranking:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: ranking } }
+    environment:
+      APP_ENV: staging
+      LOG_LEVEL: info
+      QUEUE_PREFIX: tga-staging
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+    secrets: [database_url, redis_url]
+    networks: [data]
+    depends_on: *after-migrate
+
+  worker-scheduler:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: scheduler } }
+    environment:
+      APP_ENV: staging
+      LOG_LEVEL: info
+      DATABASE_URL_FILE: /run/secrets/database_url
+    secrets: [database_url]
+    networks: [data]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  proxy:
+    <<: *hardened
+    image: nginxinc/nginx-unprivileged:alpine@sha256:26b0bf6fbf07297983cb341998d79c831508787de26627dd2a112321b9c3a4af
+    tmpfs: ["/tmp"]
+    volumes: ["./staging/nginx.conf:/etc/nginx/nginx.conf:ro"]
+    # Bind to localhost by default; a host-level TLS terminator / tunnel fronts it (STAGING.md).
+    ports: ["${STAGING_BIND:-127.0.0.1}:${STAGING_HTTP_PORT:-8080}:8080"]
+    networks: [app, edge]
+    depends_on:
+      web:
+        condition: service_started
+
+networks:
+  data: { internal: true }
+  app: { internal: true }
+  egress: {}
+  edge: {}
+
+volumes:
+  stg_pgdata:
+  stg_redisdata:
+
+secrets:
+  postgres_password: { file: ./staging/secrets/postgres_password }
+  redis_password: { file: ./staging/secrets/redis_password }
+  database_url: { file: ./staging/secrets/database_url }
+  redis_url: { file: ./staging/secrets/redis_url }
+  telegram_bot_token: { file: ./staging/secrets/telegram_bot_token }
