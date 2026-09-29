@@ -13,6 +13,7 @@ export const LIBRARY_RULES = {
   database: ['types', 'logging'],
   queues: ['types', 'validation', 'logging'],
   ui: ['types'],
+  config: [],
 };
 
 /** Presentation app: only these libraries (never database/queues/adapters). */

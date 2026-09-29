@@ -23,6 +23,7 @@ Requires Node.js 24 (`.node-version`), pnpm 11 (`corepack enable`) and Docker.
 
 ```sh
 pnpm install --frozen-lockfile
+cp .env.example .env        # local only; git-ignored
 pnpm run ci                 # lint, typecheck, boundaries, build, test, audit
 docker compose up --build   # api on 127.0.0.1:3001, web on 127.0.0.1:3000
 ```

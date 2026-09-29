@@ -1,9 +1,12 @@
 # Local development stack. Ports bind to localhost only (DEPLOYMENT.md).
-# PostgreSQL and Redis are added with PHASE-04 / PHASE-08; config validation with PHASE-03.
+# PostgreSQL and Redis are added with PHASE-04 / PHASE-08. Variables: docs/operations/CONFIGURATION.md.
 services:
   api:
     build: { context: ., target: api }
     ports: ["127.0.0.1:3001:3001"]
+    environment:
+      APP_ENV: local
+      LOG_LEVEL: info
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

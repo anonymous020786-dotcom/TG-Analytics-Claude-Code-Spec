@@ -38,6 +38,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^12.1.0
         version: 12.1.0(@nestjs/common@12.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.0)
+      '@tga/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@tga/logging':
         specifier: workspace:*
         version: link:../../packages/logging
@@ -47,6 +50,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@nestjs/testing':
         specifier: ^12.1.0
@@ -91,6 +97,25 @@ importers:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+
+  packages/config:
+    dependencies:
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@types/node':
+        specifier: ^24.19.0
+        version: 24.19.0
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.2
+        version: 5.0.2(@types/node@24.19.0)(vite@8.3.1(@types/node@24.19.0))
 
   packages/logging:
     dependencies:
@@ -1718,6 +1743,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
 snapshots:
 
   '@borewit/text-codec@0.2.2': {}
@@ -3177,3 +3205,5 @@ snapshots:
   wrappy@1.0.2: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@4.6.5: {}
