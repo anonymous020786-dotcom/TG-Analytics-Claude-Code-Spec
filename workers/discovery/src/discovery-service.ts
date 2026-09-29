@@ -16,6 +16,11 @@ export interface DiscoveryOptions {
   followUpMaxAttempts?: number;
   /** channel.posts requires the MTProto capability (CAPABILITY-MATRIX); off until verified. */
   postsEnabled?: boolean;
+  /**
+   * When set, only these usernames may be discovered (staging: "small allow-listed set",
+   * PHASE-11B). Checked before any Telegram call.
+   */
+  allowlist?: ReadonlySet<string>;
 }
 
 export type DiscoveryOutcome =
@@ -28,7 +33,7 @@ export type DiscoveryOutcome =
       stale: boolean;
       scheduled: FollowUpQueue[];
     }
-  | { status: 'rejected'; reason: ReferenceRejection | 'not_public' | 'not_found' };
+  | { status: 'rejected'; reason: ReferenceRejection | 'not_public' | 'not_found' | 'not_allowlisted' };
 
 export interface DiscoveryContext {
   traceId?: string;
@@ -43,6 +48,7 @@ export interface DiscoveryContext {
 export class DiscoveryService {
   private readonly followUpMaxAttempts: number;
   private readonly postsEnabled: boolean;
+  private readonly allowlist: ReadonlySet<string> | undefined;
 
   constructor(
     private readonly resolver: PublicEntityResolver,
@@ -52,12 +58,14 @@ export class DiscoveryService {
   ) {
     this.followUpMaxAttempts = options.followUpMaxAttempts ?? 5;
     this.postsEnabled = options.postsEnabled ?? CAPABILITIES.recentPosts.verified;
+    this.allowlist = options.allowlist;
   }
 
   async discover(input: string, context: DiscoveryContext = {}): Promise<DiscoveryOutcome> {
     const normalized = normalizeTelegramReference(input);
     if (!normalized.ok) return { status: 'rejected', reason: normalized.reason };
     const { username } = normalized;
+    if (this.allowlist && !this.allowlist.has(username)) return { status: 'rejected', reason: 'not_allowlisted' };
 
     let observed: Observed<TelegramEntity>;
     try {

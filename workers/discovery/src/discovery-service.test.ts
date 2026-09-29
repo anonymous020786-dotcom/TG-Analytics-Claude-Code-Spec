@@ -109,6 +109,14 @@ describe('DiscoveryService', () => {
     expect(await db.channel.count()).toBe(0);
   });
 
+  it('enforces the staging allow-list before calling Telegram', async () => {
+    const resolver = resolverReturning(telegram);
+    const svc = new DiscoveryService(resolver, channels, jobs, { allowlist: new Set(['telegram']) });
+    expect(await svc.discover('t.me/durov')).toEqual({ status: 'rejected', reason: 'not_allowlisted' });
+    expect(resolver.calls).toEqual([]);
+    expect((await svc.discover('@Telegram')).status).toBe('indexed');
+  });
+
   it('records a username change as an alias on rediscovery', async () => {
     const renamed: TelegramEntity = { ...telegram, username: 'telegram_news' };
     const svc = new DiscoveryService(resolverReturning(telegram, renamed), channels, jobs);

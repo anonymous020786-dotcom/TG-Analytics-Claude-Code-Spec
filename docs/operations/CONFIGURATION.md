@@ -87,3 +87,16 @@ The scheduler also reads `DATABASE_URL` and `LOG_LEVEL`.
 | `API_INTERNAL_URL` | web (server only) | API base URL for server-side rendering; never sent to browsers | `http://127.0.0.1:3001` | no |
 
 Feature flag `slice.channel-page` (default off) gates the endpoint and page: `pnpm --filter @tga/worker-scheduler flags:local set slice.channel-page on --actor <operator-id>`.
+
+### Staging variables (PHASE-11B)
+
+| Variable | Used by | Purpose | Default | Secret |
+|---|---|---|---|---|
+| `DISCOVERY_ALLOWLIST` | worker-discovery | Comma-separated usernames; anything else is rejected before any Telegram call. Unset = no allow-list (dev). | unset | no |
+| `DATABASE_URL_FILE`, `REDIS_URL_FILE`, `TELEGRAM_BOT_TOKEN_FILE` | api, workers | Read the secret from a file (Docker secret), ADR-009 | — | path only |
+| `STAGING_ALLOWLIST` | `docker-compose.staging.yml` | Value passed as `DISCOVERY_ALLOWLIST` | `telegram,durov,bottalk` | no |
+| `STAGING_BIND` | `docker-compose.staging.yml` | Host address the proxy binds to | `127.0.0.1` | no |
+| `STAGING_HTTP_PORT` | `docker-compose.staging.yml` | Host port for the proxy | `8080` | no |
+| `STAGING_TELEGRAM_BOT_TOKEN` | `scripts/staging/init-secrets.mjs` | Dedicated staging bot token written to `staging/secrets/` (falls back to `TELEGRAM_BOT_TOKEN`) | — | yes |
+
+Runbook: `docs/operations/STAGING.md`.
