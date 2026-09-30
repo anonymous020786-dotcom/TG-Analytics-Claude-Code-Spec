@@ -31,8 +31,8 @@ export function encodeCursor(value: Record<string, string>): string {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Decodes a cursor whose fields must match `shape` exactly ('uuid' or 'date'). */
-export function decodeCursor<K extends string>(cursor: string, shape: Record<K, 'uuid' | 'date' | 'int'>): Record<K, string> {
+/** Decodes a cursor whose fields must match `shape` exactly. */
+export function decodeCursor<K extends string>(cursor: string, shape: Record<K, 'uuid' | 'date' | 'int' | 'bigint'>): Record<K, string> {
   if (cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor)) throw new InvalidCursorError();
   let parsed: unknown;
   try {
@@ -50,6 +50,7 @@ export function decodeCursor<K extends string>(cursor: string, shape: Record<K, 
     if (shape[key] === 'uuid' && !UUID.test(v)) throw new InvalidCursorError();
     if (shape[key] === 'date' && Number.isNaN(Date.parse(v))) throw new InvalidCursorError();
     if (shape[key] === 'int' && !/^\d{1,9}$/.test(v)) throw new InvalidCursorError();
+    if (shape[key] === 'bigint' && !/^\d{1,19}$/.test(v)) throw new InvalidCursorError();
   }
   return obj as Record<K, string>;
 }

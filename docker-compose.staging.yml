@@ -131,6 +131,20 @@ services:
     networks: [data]
     depends_on: *after-migrate
 
+  # Search indexing (PHASE-12): catalog data only, no Telegram access, no egress.
+  worker-search:
+    <<: *hardened
+    build: { context: ., target: worker, args: { WORKER: search } }
+    environment:
+      APP_ENV: staging
+      LOG_LEVEL: info
+      QUEUE_PREFIX: tga-staging
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+    secrets: [database_url, redis_url]
+    networks: [data]
+    depends_on: *after-migrate
+
   worker-scheduler:
     <<: *hardened
     build: { context: ., target: worker, args: { WORKER: scheduler } }

@@ -27,6 +27,7 @@ COPY workers/metrics/package.json workers/metrics/
 COPY workers/metadata/package.json workers/metadata/
 COPY workers/scheduler/package.json workers/scheduler/
 COPY workers/ranking/package.json workers/ranking/
+COPY workers/search/package.json workers/search/
 
 FROM manifests AS build
 RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \

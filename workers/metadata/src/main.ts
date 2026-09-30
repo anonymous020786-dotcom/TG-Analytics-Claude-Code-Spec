@@ -29,10 +29,11 @@ function main(): void {
     limiter: new RedisRateLimiter({ redis: limiterRedis, prefix: `${config.QUEUE_PREFIX}:ratelimit:`, ...DEFAULT_BOT_API_LIMIT }),
     credentialId: config.TELEGRAM_CREDENTIAL_ID,
   });
-  const deps = { channels: new ChannelRepository(db), telegram };
+  const ledger = new JobRepository(db);
+  const deps = { channels: new ChannelRepository(db), telegram, jobs: ledger };
 
   runQueueWorker<{ channelId: string }>({
-    ledger: new JobRepository(db),
+    ledger,
     transport,
     queue: QUEUES.metadata,
     concurrency: config.WORKER_CONCURRENCY,

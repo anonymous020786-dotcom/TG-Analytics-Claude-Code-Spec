@@ -57,7 +57,10 @@ model Channel {
   metricSnapshots ChannelMetricSnapshot[]
   anomalies       MetricAnomaly[]
   rankings        RankingSnapshot[]
+  searchDocument  ChannelSearchDocument?
 
+  /// Browse/filter lists sorted by member count (PHASE-12 keyset: member_count DESC, id ASC).
+  @@index([memberCount(sort: Desc), id])
   @@map("channels")
 }
 
@@ -76,6 +79,27 @@ model ChannelAlias {
   @@unique([channelId, username])
   @@index([username])
   @@map("channel_aliases")
+}
+
+/// Search index document (PHASE-12, ADR-015). Text used for matching only; visibility, type and
+/// member counts are always read from channels at query time, so a stale document never exposes
+/// a hidden or inactive entity. Maintained by workers/search from search.index jobs.
+model ChannelSearchDocument {
+  channelId     String   @id @map("channel_id") @db.Uuid
+  channel       Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  /// Normalized (NFKC, lowercase) current username, aliases, title and description.
+  username      String
+  aliases       String   @default("")
+  title         String
+  description   String   @default("")
+  /// Concatenation of the fields above; GIN trigram index serves LIKE and word similarity.
+  searchText    String   @map("search_text")
+  /// channels.updated_at of the indexed state; older versions never overwrite newer ones.
+  sourceVersion DateTime @map("source_version") @db.Timestamptz(6)
+  indexedAt     DateTime @default(now()) @map("indexed_at") @db.Timestamptz(6)
+
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("channel_search_documents")
 }
 
 model Category {

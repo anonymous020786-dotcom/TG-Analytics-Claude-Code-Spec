@@ -28,3 +28,4 @@ export { AuditLogRepository, type AuditEntry } from './repositories/audit';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';
 export type { AuditLog, Channel, ChannelAlias, Job, MetricAnomaly, Post, RankingRun } from './generated/prisma/client';
+export { InvalidSearchQueryError, PostgresSearchIndex } from './search-index';
