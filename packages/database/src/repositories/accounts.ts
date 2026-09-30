@@ -84,6 +84,15 @@ export class SessionRepository {
     return r.count;
   }
 
+  /**
+   * Object-level revocation: only the owner's own session is affected. Returns false when the
+   * session does not exist, is already revoked, or belongs to someone else (callers answer 404).
+   */
+  async revokeOwned(userId: string, sessionId: string, now: Date = new Date()): Promise<boolean> {
+    const r = await this.db.userSession.updateMany({ where: { id: sessionId, userId, revokedAt: null }, data: { revokedAt: now } });
+    return r.count === 1;
+  }
+
   listActive(userId: string, now: Date = new Date()): Promise<UserSession[]> {
     return this.db.userSession.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: now }, idleExpiresAt: { gt: now } },

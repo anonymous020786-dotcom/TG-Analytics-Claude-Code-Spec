@@ -83,3 +83,17 @@ State-changing requests (`POST`) must send `Content-Type: application/json`, an 
 | `POST /api/v1/auth/logout-all` | End every session of the user | `200 { revoked: n }`, clears the cookie |
 
 `user` = `{ id, firstName, lastName, username }`.
+
+## Authorization (PHASE-17, implemented)
+
+Guarded routes answer `401 not_authenticated` without a session and `403 forbidden` without the required permission (ADR-018). Changes need `Origin` and `X-CSRF-Token` as for sign-out. Another user's object is `404`, never `403`.
+
+| Method and path | Requires | Response |
+|---|---|---|
+| `GET /api/v1/auth/sessions` | signed in | Own active sessions: `[{ id, current, createdAt, lastSeenAt, userAgent }]` |
+| `DELETE /api/v1/auth/sessions/:id` | signed in, own session | `{ revoked: true, current }`; another user's or unknown id → `404` |
+| `GET /api/v1/admin/users/:userId/roles` | `roles.manage` | `{ userId, roles }` |
+| `PUT /api/v1/admin/users/:userId/roles/:role` | `roles.manage` | `{ userId, role, granted }` (idempotent; audited `role.granted`) |
+| `DELETE /api/v1/admin/users/:userId/roles/:role` | `roles.manage` | `{ userId, role, revoked }`; last admin → `409 last_role_holder` (audited `role.revoked`) |
+
+Unknown user or malformed id → `404 not_found`; unknown role → `404 unknown_role`. `GET /api/v1/auth/me` also returns `roles` (display only).

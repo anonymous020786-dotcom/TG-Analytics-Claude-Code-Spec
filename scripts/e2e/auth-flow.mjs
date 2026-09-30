@@ -120,6 +120,35 @@ if (!authOn) {
     expect(after.status >= 300 && after.status < 400 && (after.headers.get('location') ?? '').includes('/login'), `after sign-out /account should redirect, got ${after.status}`);
   });
 
+  await check('authorization (PHASE-17): A cannot end B\'s session (404); non-admins get 403 on admin APIs', async () => {
+    async function signInAs(id, first) {
+      const jar = new Jar();
+      const { body } = await bootstrap(jar);
+      const res = await post('/api/v1/auth/telegram', jar, body.data.csrfToken, signedPayload({ id, first_name: first, username: `tga_e2e_${id}` }));
+      expect(res.status === 200, `sign-in ${id}: ${res.status}`);
+      jar.absorb(res);
+      const { data } = await res.json();
+      return { jar, csrf: data.csrfToken, userId: data.user.id };
+    }
+    const a = await signInAs(999000001, 'E2E');
+    const b = await signInAs(999000002, 'Other');
+    try {
+      const list = await req('/api/v1/auth/sessions', { headers: { cookie: b.jar.header() } });
+      expect(list.status === 200, `B lists own sessions: ${list.status}`);
+      const bSession = (await list.json()).data.find((s) => s.current).id;
+      const idor = await req(`/api/v1/auth/sessions/${bSession}`, { method: 'DELETE', headers: { origin, cookie: a.jar.header(), 'x-csrf-token': a.csrf } });
+      expect(idor.status === 404, `A ending B's session must be 404, got ${idor.status}`);
+      const stillIn = await req('/api/v1/auth/sessions', { headers: { cookie: b.jar.header() } });
+      expect(stillIn.status === 200, 'B must still be signed in');
+      const admin = await req(`/api/v1/admin/users/${b.userId}/roles`, { headers: { cookie: a.jar.header() } });
+      expect(admin.status === 403, `non-admin on admin API must be 403, got ${admin.status}`);
+      expect((await req(`/api/v1/admin/users/${b.userId}/roles`)).status === 401, 'anonymous admin API must be 401');
+    } finally {
+      await post('/api/v1/auth/logout', a.jar, a.csrf, {});
+      await post('/api/v1/auth/logout', b.jar, b.csrf, {});
+    }
+  });
+
   await check('open redirects are refused on /login?next=', async () => {
     const jar = new Jar();
     const { body } = await bootstrap(jar);

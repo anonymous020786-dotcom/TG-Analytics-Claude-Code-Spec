@@ -37,6 +37,7 @@ model User {
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
   sessions         UserSession[]
+  roles            UserRole[]
 
   @@map("users")
 }
@@ -59,6 +60,57 @@ model UserSession {
 
   @@index([userId])
   @@map("user_sessions")
+}
+
+// ---------------------------------------------------------------- Authorization (PHASE-17)
+//
+// Roles and permissions are seeded and changed only by migrations (reviewable), never by
+// ad-hoc edits. Users gain roles through the audited role API or the operator CLI.
+
+/// A named set of permissions (e.g. admin).
+model Role {
+  key         String           @id
+  description String
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+/// A single capability checked by the API (e.g. roles.manage).
+model Permission {
+  key         String           @id
+  description String
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleKey       String     @map("role_key")
+  role          Role       @relation(fields: [roleKey], references: [key], onDelete: Cascade)
+  permissionKey String     @map("permission_key")
+  permission    Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@id([roleKey, permissionKey])
+  @@index([permissionKey])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleKey   String   @map("role_key")
+  role      Role     @relation(fields: [roleKey], references: [key], onDelete: Restrict)
+  /// Who granted it: a user id or an operator id (CLI).
+  grantedBy String   @map("granted_by")
+  grantedAt DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  @@id([userId, roleKey])
+  @@index([roleKey])
+  @@map("user_roles")
 }
 
 // ---------------------------------------------------------------- Catalog

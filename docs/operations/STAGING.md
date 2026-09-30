@@ -75,3 +75,14 @@ Also check:
 - The API uses the dedicated staging bot as the login bot (`TELEGRAM_LOGIN_BOT_TOKEN_FILE` → `telegram_bot_token`; username `STAGING_LOGIN_BOT_USERNAME`). The CSRF secret comes from `staging/secrets/csrf_secret` (`init-secrets.mjs` creates it).
 - Flag `auth.login` is **off** in staging: the Telegram widget only renders on a domain registered with BotFather (`/setdomain`), which needs the public staging domain (OD-016).
 - `scripts/e2e/auth-flow.mjs --auth on` verifies the full flow through the edge by signing payloads with the staging bot token exactly as Telegram does. It uses a synthetic test user (Telegram id 999000001) and never prints the token.
+
+## Roles (PHASE-17)
+
+- No default admin exists. After a person has signed in once, an operator grants the first admin (audited as `operator:<you>`):
+
+  ```sh
+  $S worker-scheduler node workers/scheduler/dist/roles-cli.js grant <telegram-user-id> admin --actor <you>
+  $S worker-scheduler node workers/scheduler/dist/roles-cli.js list <telegram-user-id>
+  ```
+
+- The last admin cannot be removed (CLI or API).

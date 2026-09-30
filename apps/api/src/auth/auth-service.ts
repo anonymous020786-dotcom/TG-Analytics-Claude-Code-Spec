@@ -1,5 +1,5 @@
 import { csrfToken, generateToken, hashToken, isTokenShape, verifyCsrfToken, verifyTelegramLogin } from '@tga/auth';
-import type { ActiveSession, AuditLogRepository, FeatureFlagRepository, SessionPolicy, SessionRepository, UserRepository } from '@tga/database';
+import type { ActiveSession, AuditLogRepository, FeatureFlagRepository, RoleRepository, SessionPolicy, SessionRepository, UserRepository } from '@tga/database';
 import { FlagGate } from '../common/flag-gate';
 import { parseCookies, serializeCookie } from './cookies';
 
@@ -11,6 +11,8 @@ export interface AuthServiceDeps {
   sessions: SessionRepository;
   audit: AuditLogRepository;
   flags: FeatureFlagRepository;
+  /** When set, /me also reports the user's roles (display only; the API enforces access). */
+  roles?: RoleRepository;
   botToken: string;
   botUsername: string;
   csrfSecret: string;
@@ -42,6 +44,8 @@ export interface PublicUser {
 }
 
 export type AuthOutcome<T> = { kind: 'ok'; value: T; setCookies: string[] } | { kind: 'error'; status: 400 | 401 | 403 | 404 | 415; code: string; message: string };
+
+export type AuthError = Extract<AuthOutcome<never>, { kind: 'error' }>;
 
 const PRE_NONCE_SECONDS = 86_400;
 
@@ -86,19 +90,35 @@ export class AuthService {
     return pre ? `pre:${pre}` : null;
   }
 
-  private reject(event: string, req: AuthRequest, status: 400 | 401 | 403 | 415, code: string, message: string, extra: Record<string, unknown> = {}): AuthOutcome<never> {
+  private reject(event: string, req: AuthRequest, status: 400 | 401 | 403 | 415, code: string, message: string, extra: Record<string, unknown> = {}): AuthError {
     this.deps.log?.(event, { requestId: req.requestId, code, ...extra });
     return { kind: 'error', status, code, message };
   }
 
-  /** JSON + exact Origin + CSRF token for the caller's current binding. */
-  private checkUnsafe(req: AuthRequest, binding: string | null): AuthOutcome<never> | null {
-    if (typeof req.contentType !== 'string' || !/^application\/json(;|$)/i.test(req.contentType)) {
+  /** JSON (for requests with a body) + exact Origin + CSRF token for the caller's current binding. */
+  private checkUnsafe(req: AuthRequest, binding: string | null, requireJson = true): AuthError | null {
+    if (requireJson && (typeof req.contentType !== 'string' || !/^application\/json(;|$)/i.test(req.contentType))) {
       return this.reject('auth.rejected', req, 415, 'unsupported_media_type', 'Send JSON');
     }
     if (req.origin !== this.deps.allowedOrigin) return this.reject('auth.rejected', req, 403, 'origin_not_allowed', 'Request origin not allowed');
     if (!binding || !verifyCsrfToken(this.deps.csrfSecret, binding, req.csrf)) return this.reject('auth.rejected', req, 403, 'csrf_failed', 'Missing or invalid CSRF token');
     return null;
+  }
+
+  /**
+   * The signed-in principal for guards and object-level services (PHASE-17). Unsafe methods
+   * get the same Origin + CSRF checks as sign-out; JSON is required only when a body is sent.
+   */
+  async authenticate(req: AuthRequest, method: string): Promise<{ kind: 'ok'; active: ActiveSession } | AuthError> {
+    if (!(await this.gate.enabled())) return { kind: 'error', status: 404, code: 'not_found', message: 'Not found' };
+    const { active } = await this.current(req);
+    if (!active) return this.reject('auth.rejected', req, 401, 'not_authenticated', 'Sign in required');
+    const safe = method === 'GET' || method === 'HEAD';
+    if (!safe) {
+      const denied = this.checkUnsafe(req, this.binding(active, null), method === 'POST');
+      if (denied) return denied;
+    }
+    return { kind: 'ok', active };
   }
 
   /** Browser bootstrap: current user (if any), a CSRF token, and the login bot for the widget. */
@@ -122,10 +142,11 @@ export class AuthService {
   }
 
   /** Read-only session check for the web server (no cookies are set). */
-  async me(req: Pick<AuthRequest, 'cookie'>): Promise<AuthOutcome<{ authenticated: boolean; user: PublicUser | null }>> {
+  async me(req: Pick<AuthRequest, 'cookie'>): Promise<AuthOutcome<{ authenticated: boolean; user: PublicUser | null; roles: string[] }>> {
     if (!(await this.gate.enabled())) return { kind: 'error', status: 404, code: 'not_found', message: 'Not found' };
     const { active } = await this.current({ cookie: req.cookie, origin: null, contentType: null, csrf: null, userAgent: null, requestId: '' });
-    return { kind: 'ok', value: { authenticated: !!active, user: active ? toPublic(active.user) : null }, setCookies: [] };
+    const roles = active && this.deps.roles ? await this.deps.roles.rolesOf(active.user.id) : [];
+    return { kind: 'ok', value: { authenticated: !!active, user: active ? toPublic(active.user) : null, roles }, setCookies: [] };
   }
 
   async loginWithTelegram(req: AuthRequest, payload: unknown): Promise<AuthOutcome<{ user: PublicUser; created: boolean; csrfToken: string }>> {

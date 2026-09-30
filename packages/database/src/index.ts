@@ -28,6 +28,7 @@ export { LeaseRepository } from './repositories/leases';
 export { AnomalyRepository, type AnomalyInput } from './repositories/anomalies';
 export { RankingRepository, type RankingEntryView, type SaveRankingRunInput } from './repositories/rankings';
 export { AuditLogRepository, type AuditEntry } from './repositories/audit';
+export { PROTECTED_ROLES, RoleRepository, type RevokeOutcome } from './repositories/roles';
 export { SessionRepository, UserRepository, type ActiveSession, type SessionPolicy, type TelegramUserInput } from './repositories/accounts';
 export { FeatureFlagRepository } from './repositories/feature-flags';
 export { PostgresAnalyticsStore } from './analytics-store';

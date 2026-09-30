@@ -1,5 +1,7 @@
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { AUTH_SERVICE, AuthController } from './auth/auth.controller';
+import { AdminRolesController, AUTHZ_DEPS, type AuthzDeps, SessionsController } from './authz/authz.controllers';
+import { PERMISSION_GUARD_DEPS, PermissionGuard, type PermissionGuardDeps } from './authz/permission.guard';
 import type { AuthService } from './auth/auth-service';
 import type { ChannelReader } from './channels/channel-reader';
 import { CHANNEL_READER, ChannelsController } from './channels/channels.controller';
@@ -18,6 +20,8 @@ export interface AppReaders {
   rankingsReader?: RankingsReader;
   seoReader?: SeoReader;
   authService?: AuthService;
+  /** Authorization (PHASE-17): requires authService. */
+  authz?: { guard: PermissionGuardDeps; deps: AuthzDeps };
 }
 
 @Module({})
@@ -46,6 +50,10 @@ export class AppModule {
     if (options.authService) {
       controllers.push(AuthController);
       providers.push({ provide: AUTH_SERVICE, useValue: options.authService });
+      if (options.authz) {
+        controllers.push(SessionsController, AdminRolesController);
+        providers.push({ provide: PERMISSION_GUARD_DEPS, useValue: options.authz.guard }, PermissionGuard, { provide: AUTHZ_DEPS, useValue: options.authz.deps });
+      }
     }
     if (options.channelReader) {
       controllers.push(ChannelsController);
