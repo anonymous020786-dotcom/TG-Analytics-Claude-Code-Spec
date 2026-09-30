@@ -114,6 +114,19 @@ The web app reads the API only server-side (`API_INTERNAL_URL`). Browser autocom
 
 Feature flag `seo.indexing` (default off) is the master switch: while off, every page is `noindex`, `robots.txt` disallows everything and the sitemap is empty. The staging edge adds `X-Robots-Tag: noindex` and its own `robots.txt` regardless.
 
+### Accounts (PHASE-16, D-021)
+
+| Variable | Used by | Purpose | Default | Secret |
+|---|---|---|---|---|
+| `TELEGRAM_LOGIN_BOT_TOKEN` | api | Login bot token (Telegram Login Widget signature key); the bot needs the site domain set with BotFather `/setdomain` | — (sign-in disabled) | yes |
+| `TELEGRAM_LOGIN_BOT_USERNAME` | api | Login bot username, shown to the widget | — | no |
+| `CSRF_SECRET` | api | HMAC key for CSRF tokens, at least 32 characters | — | yes |
+| `PUBLIC_SITE_URL` | api | Exact allowed `Origin` for state-changing requests (same value as the web's) | `http://127.0.0.1:3000` | no |
+| `SESSION_ABSOLUTE_DAYS` / `SESSION_IDLE_DAYS` | api | Session lifetimes (provisional, OD-005) | `30` / `7` | no |
+| `COOKIE_SECURE` | api | `Secure` + `__Host-` cookies; `false` only for plain-HTTP non-localhost testing | `true` | no |
+
+Sign-in routes exist only when the token, username and CSRF secret are all set. Feature flag `auth.login` (default off) must also be on. Empty values in `.env.example` mean "not configured".
+
 ### Staging variables (PHASE-11B)
 
 | Variable | Used by | Purpose | Default | Secret |

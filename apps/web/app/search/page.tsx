@@ -24,6 +24,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function SearchPage({ searchParams }: Props) {
   const query = parseListQuery(await searchParams);
+  // Page-level gate too (metadata is streamed): /search without q renders no ListResults.
+  await assertListAvailable(probe(query));
   return (
     <main id="main" className="wrap">
       <h1>Search</h1>

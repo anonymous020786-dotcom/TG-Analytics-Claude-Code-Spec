@@ -56,7 +56,7 @@ Non-functional: secure, responsive, accessible, SEO-ready, observable, horizonta
 
 | ID | Requirement | Acceptance criteria | Source | Phase | Rel |
 |---|---|---|---|---|---|
-| FR-AUTH-01 | Registration, email verification, login, logout, password reset. | E2E for each flow; reset tokens are single-use and expire. | PHASE-16, ASVS-CHECKLIST.md | 16 | R1 |
+| FR-AUTH-01 | Sign-in with Telegram (Telegram Login Widget), logout; an account is created on first sign-in (D-021). No passwords, email verification or password reset. | Tests: a correctly signed widget payload creates or reuses the account and a session; tampered, stale or wrong-bot payloads are rejected; logout revokes the session. | PHASE-16, D-021, ASVS-CHECKLIST.md | 16 | R1 |
 | FR-AUTH-02 | Secure sessions (secure cookies, CSRF strategy). | Cookies are `HttpOnly`/`Secure`/`SameSite`; a state-changing request without a CSRF token is rejected. | SECURITY.md | 16 | R1 |
 | FR-AUTH-03 | RBAC with server-side and object-level authorization; privileged actions audited. | Test: user A cannot read/modify user B's watchlist/alerts/keys (IDOR test) → 403/404. | PHASE-17, SECURITY.md | 17 | R1 |
 | FR-DASH-01 | Protected dashboard routes in `ROUTES.md`. | Unauthenticated access redirects to login; E2E covers each route. | ROUTES.md | 18 | R1 |

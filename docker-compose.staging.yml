@@ -74,7 +74,13 @@ services:
       APP_ENV: staging
       LOG_LEVEL: info
       DATABASE_URL_FILE: /run/secrets/database_url
-    secrets: [database_url]
+      # Sign in with Telegram (PHASE-16, D-021): the dedicated staging bot is also the login bot.
+      # Live widget sign-in needs a public domain set with BotFather /setdomain (OD-016).
+      TELEGRAM_LOGIN_BOT_TOKEN_FILE: /run/secrets/telegram_bot_token
+      TELEGRAM_LOGIN_BOT_USERNAME: ${STAGING_LOGIN_BOT_USERNAME:-test202_6bot}
+      CSRF_SECRET_FILE: /run/secrets/csrf_secret
+      PUBLIC_SITE_URL: ${STAGING_PUBLIC_URL:-http://127.0.0.1:8080}
+    secrets: [database_url, telegram_bot_token, csrf_secret]
     networks: [data, app]
     depends_on:
       migrate:
@@ -188,3 +194,4 @@ secrets:
   database_url: { file: ./staging/secrets/database_url }
   redis_url: { file: ./staging/secrets/redis_url }
   telegram_bot_token: { file: ./staging/secrets/telegram_bot_token }
+  csrf_secret: { file: ./staging/secrets/csrf_secret }

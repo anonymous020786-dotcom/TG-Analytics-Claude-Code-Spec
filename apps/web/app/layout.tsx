@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { rankingsAvailable } from '../lib/api';
+import { currentUser } from '../lib/auth';
 import { siteOrigin } from '../lib/seo';
 import { SkipLink } from '@tga/ui';
 import '@tga/ui/styles.css';
@@ -21,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const showRankings = await rankingsAvailable();
+  const [showRankings, me] = await Promise.all([rankingsAvailable(), currentUser()]);
   return (
     <html lang="en">
       <body>
@@ -52,6 +53,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 <li>
                   <Link href="/docs">Methodology</Link>
                 </li>
+                {/* Sign-in link only while sign-in is enabled (flag auth.login). */}
+                {me.kind === 'user' ? (
+                  <li>
+                    <Link href="/account">{me.user.firstName}</Link>
+                  </li>
+                ) : me.kind === 'anonymous' ? (
+                  <li>
+                    <Link href="/login">Sign in</Link>
+                  </li>
+                ) : null}
               </ul>
             </nav>
           </div>
