@@ -3,6 +3,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { rankingsAvailable } from '../lib/api';
 import { siteOrigin } from '../lib/seo';
+import { SkipLink } from '@tga/ui';
+import '@tga/ui/styles.css';
 import './globals.css';
 
 // Default for every page is noindex (fail closed); pages opt in via pageMetadata() when the
@@ -23,9 +25,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <a className="skip" href="#main">
-          Skip to content
-        </a>
+        <SkipLink />
         <header className="site-header">
           <div className="wrap bar">
             <Link className="brand" href="/">

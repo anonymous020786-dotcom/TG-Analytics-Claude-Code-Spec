@@ -74,7 +74,7 @@ export function SearchBox({ defaultValue = '', name = 'q', label = 'Search chann
 
   return (
     <div className="search-field">
-      <label htmlFor={id} className="skip">
+      <label htmlFor={id} className="ui-visually-hidden">
         {label}
       </label>
       <input
@@ -86,7 +86,6 @@ export function SearchBox({ defaultValue = '', name = 'q', label = 'Search chann
         autoComplete="off"
         maxLength={64}
         role="combobox"
-        aria-label={label}
         aria-autocomplete="list"
         aria-expanded={expanded}
         aria-controls={listId}
@@ -115,6 +114,10 @@ export function SearchBox({ defaultValue = '', name = 'q', label = 'Search chann
           </li>
         ))}
       </ul>
+      {/* Announces result counts politely; the listbox itself is not a live region. */}
+      <p className="ui-visually-hidden" role="status" aria-live="polite">
+        {open && value.trim().length >= MIN_CHARS ? (items.length === 0 ? '' : `${items.length} suggestion${items.length === 1 ? '' : 's'} available; use the arrow keys to choose.`) : ''}
+      </p>
     </div>
   );
 }

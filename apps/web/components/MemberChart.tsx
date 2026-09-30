@@ -1,3 +1,4 @@
+import { DataTable, EmptyState } from '@tga/ui';
 import { areaPath, chartGeometry, linePath } from '../lib/chart';
 import { formatCompact, formatCount, formatDate, formatShortDate } from '../lib/format';
 
@@ -21,9 +22,9 @@ const BOX = { width: 640, height: 240, margin: { top: 28, right: 72, bottom: 32,
 export function MemberChart({ points, from, to, title, table = false, excludedAnomalies = 0 }: Props) {
   if (points.length === 0) {
     return (
-      <div className="notice">
-        <p>No subscriber history in this period yet. Values appear after the next collection.</p>
-      </div>
+      <EmptyState title="No subscriber history in this period yet.">
+        <p>Values appear after the next collection.</p>
+      </EmptyState>
     );
   }
 
@@ -91,27 +92,15 @@ export function MemberChart({ points, from, to, title, table = false, excludedAn
       {table ? (
         <details>
           <summary>Show data table</summary>
-          <div className="table-scroll">
-            <table>
-              <caption className="small muted">{title}</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Day (UTC)</th>
-                  <th scope="col" className="num">
-                    Subscribers
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...points].reverse().map((p) => (
-                  <tr key={p.date}>
-                    <td>{formatDate(p.date)}</td>
-                    <td className="num">{formatCount(p.value)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            caption={title}
+            rows={[...points].reverse()}
+            rowKey={(p) => p.date}
+            columns={[
+              { key: 'day', header: 'Day (UTC)', cell: (p) => formatDate(p.date) },
+              { key: 'value', header: 'Subscribers', cell: (p) => formatCount(p.value), numeric: true },
+            ]}
+          />
         </details>
       ) : null}
     </figure>

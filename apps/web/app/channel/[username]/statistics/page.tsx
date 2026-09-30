@@ -1,3 +1,4 @@
+import { LinkTabs } from '@tga/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -37,13 +38,7 @@ export default async function StatisticsPage({ params, searchParams }: Props) {
         ]}
       />
       <h1>Subscriber statistics</h1>
-      <nav className="tabs" aria-label="Time range">
-        {CHART_WINDOWS.map((d) => (
-          <Link key={d} href={`${base}?days=${d}`} aria-current={d === days ? 'page' : undefined}>
-            {d === 365 ? '1 year' : `${d} days`}
-          </Link>
-        ))}
-      </nav>
+      <LinkTabs label="Time range" Link={Link} items={CHART_WINDOWS.map((d) => ({ href: `${base}?days=${d}`, label: d === 365 ? '1 year' : `${d} days`, current: d === days }))} />
       <Suspense key={days} fallback={<ChartSkeleton />}>
         <ChartSection channelId={c.id} days={days} table retryHref={`${base}?days=${days}`} />
       </Suspense>

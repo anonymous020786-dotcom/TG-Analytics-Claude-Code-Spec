@@ -1,3 +1,4 @@
+import { LinkTabs } from '@tga/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { RankingList, requireRankings } from '../../components/RankingView';
@@ -30,13 +31,7 @@ export default async function RankingsPage({ searchParams }: Props) {
   return (
     <main id="main" className="wrap">
       <h1>Rankings</h1>
-      <nav className="tabs" aria-label="Rankings">
-        {rankings.map((r) => (
-          <Link key={r.key} href={`/rankings?ranking=${r.key}`} aria-current={r.key === selected?.key ? 'page' : undefined}>
-            {r.label}
-          </Link>
-        ))}
-      </nav>
+      <LinkTabs label="Rankings" Link={Link} items={rankings.map((r) => ({ href: `/rankings?ranking=${r.key}`, label: r.label, current: r.key === selected?.key }))} />
       {selected ? <RankingList rankingKey={selected.key} basePath={`/rankings?ranking=${selected.key}`} {...(cursor && /^[A-Za-z0-9_-]{1,512}$/.test(cursor) ? { cursor } : {})} /> : null}
     </main>
   );

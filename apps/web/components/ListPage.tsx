@@ -1,9 +1,10 @@
+import { Alert, CursorPager, EmptyState } from '@tga/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { fetchChannelList } from '../lib/api';
 import { type ListQuery, listQueryString } from '../lib/params';
-import { ChannelList, EmptyState } from './ChannelList';
+import { ChannelList } from './ChannelList';
 
 /**
  * One API call per request, shared by generateMetadata and the page (keyed by the serialized
@@ -28,12 +29,12 @@ export async function ListResults({ basePath, query, emptyText }: { basePath: st
   if (result.kind === 'not_found') notFound(); // already handled in generateMetadata
   if (result.kind === 'invalid') {
     return (
-      <div className="notice" role="alert">
-        <p>That search could not be run: {result.message}.</p>
+      <Alert tone="error" title="That search could not be run." live>
+        <p>{result.message}.</p>
         <p>
           <Link href={basePath}>Start over</Link>
         </p>
-      </div>
+      </Alert>
     );
   }
 
@@ -41,20 +42,15 @@ export async function ListResults({ basePath, query, emptyText }: { basePath: st
   return (
     <>
       {items.length === 0 ? (
-        <EmptyState>
-          <p>{emptyText}</p>
-        </EmptyState>
+        <EmptyState title={emptyText} />
       ) : (
         <ChannelList label="Results" rows={items.map((c) => ({ key: c.id, ...c }))} />
       )}
-      <nav className="pager" aria-label="Pagination">
-        {query.cursor ? <Link href={`${basePath}${listQueryString(query, null)}`}>Back to first page</Link> : null}
-        {nextCursor ? (
-          <Link href={`${basePath}${listQueryString(query, nextCursor)}`} rel="next">
-            Next page
-          </Link>
-        ) : null}
-      </nav>
+      <CursorPager
+        Link={Link}
+        {...(query.cursor ? { firstHref: `${basePath}${listQueryString(query, null)}` } : {})}
+        {...(nextCursor ? { nextHref: `${basePath}${listQueryString(query, nextCursor)}` } : {})}
+      />
     </>
   );
 }
