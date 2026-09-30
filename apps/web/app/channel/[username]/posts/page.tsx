@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Breadcrumbs } from '../../../../components/Seo';
 import { requireChannel } from '../../../../lib/channel';
+import { pageMetadata } from '../../../../lib/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +10,7 @@ type Props = { params: Promise<{ username: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = await requireChannel((await params).username, '/posts');
-  return { title: `Posts: ${c.title} (@${c.username})`, robots: { index: false, follow: false } };
+  return pageMetadata({ title: `Posts: ${c.title} (@${c.username})`, description: `Post data for ${c.title} (@${c.username}) is not available yet.`, path: `/channel/${c.username}/posts`, indexable: false });
 }
 
 /**
@@ -20,9 +22,14 @@ export default async function PostsPage({ params }: Props) {
   const c = await requireChannel((await params).username, '/posts');
   return (
     <main id="main" className="wrap">
-      <p className="kicker">
-        <Link href={`/channel/${c.username}`}>{c.title}</Link>
-      </p>
+      <Breadcrumbs
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Channels', path: '/channels' },
+          { name: c.title, path: `/channel/${c.username}` },
+          { name: 'Posts', path: `/channel/${c.username}/posts` },
+        ]}
+      />
       <h1>Posts</h1>
       <div className="notice">
         <p>Post data is not available yet.</p>

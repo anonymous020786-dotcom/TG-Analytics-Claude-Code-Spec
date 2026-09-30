@@ -86,6 +86,8 @@ services:
     tmpfs: ["/app/apps/web/.next/cache"]
     environment:
       API_INTERNAL_URL: http://api:3001
+      # Canonical/sitemap origin (PHASE-14). Staging is never indexed: the edge adds noindex.
+      PUBLIC_SITE_URL: ${STAGING_PUBLIC_URL:-http://127.0.0.1:8080}
     networks: [app]
     depends_on:
       api:

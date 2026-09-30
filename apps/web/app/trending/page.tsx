@@ -1,14 +1,21 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { RankingList, requireRankings } from '../../components/RankingView';
+import { indexingEnabled } from '../../lib/api';
 import { one, type SearchParams } from '../../lib/params';
+import { pageMetadata } from '../../lib/seo';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const rankings = await requireRankings();
   if (!rankings.some((r) => r.key === 'trending')) notFound();
-  return { title: 'Trending' };
+  return pageMetadata({
+    title: 'Trending',
+    description: 'Public Telegram channels and groups with the strongest recent subscriber growth. A calculated signal, not official Telegram data.',
+    path: '/trending',
+    indexable: !one(await searchParams, 'cursor') && (await indexingEnabled()),
+  });
 }
 
 /** Trending is a calculated signal, not official Telegram data (TRENDING.md, FR-TRND-01). */

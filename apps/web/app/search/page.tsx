@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { assertListAvailable, FilterFields, ListResults } from '../../components/ListPage';
 import { SearchBox } from '../../components/SearchBox';
+import { pageMetadata } from '../../lib/seo';
 import { type ListQuery, parseListQuery, type SearchParams } from '../../lib/params';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +14,12 @@ const probe = (query: ListQuery): ListQuery => (query.q ? query : { sort: 'membe
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const query = parseListQuery(await searchParams);
   await assertListAvailable(probe(query));
-  return { title: query.q ? `Search: ${query.q}` : 'Search' };
+  return pageMetadata({
+    title: query.q ? `Search: ${query.q}` : 'Search',
+    description: 'Search public Telegram channels and groups by name, @username or keyword.',
+    path: '/search',
+    indexable: false, // internal search results are never indexed (SEO.md: no thin pages)
+  });
 }
 
 export default async function SearchPage({ searchParams }: Props) {

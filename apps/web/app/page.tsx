@@ -1,9 +1,22 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChannelList } from '../components/ChannelList';
 import { SearchBox } from '../components/SearchBox';
-import { fetchChannelList } from '../lib/api';
+import { JsonLd } from '../components/Seo';
+import { fetchChannelList, indexingEnabled } from '../lib/api';
+import { pageMetadata, websiteJsonLd } from '../lib/seo';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const m = pageMetadata({
+    title: 'TG Analytics',
+    description: 'Subscriber counts, growth and data freshness for public Telegram channels and groups, calculated from public Telegram data.',
+    path: '/',
+    indexable: await indexingEnabled(),
+  });
+  return { ...m, title: { absolute: 'TG Analytics: public Telegram channel and group analytics' } };
+}
 
 export default async function HomePage() {
   // Browse is part of search (flag search.public). While it is off, the section is omitted.
@@ -11,6 +24,7 @@ export default async function HomePage() {
 
   return (
     <main id="main" className="wrap">
+      <JsonLd data={websiteJsonLd()} />
       <h1>Public Telegram channel and group analytics</h1>
       <p className="muted">Subscriber counts, growth and data freshness for public channels and groups, calculated from public Telegram data.</p>
 

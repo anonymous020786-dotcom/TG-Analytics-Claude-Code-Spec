@@ -143,3 +143,6 @@ dl.defs dd { margin: 0; }
 @media (max-width: 600px) {
   .chart .axis text, .chart .end-label, .chart .readout { font-size: 22px; }
 }
+
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0 0 8px; padding: 0; }
+.crumbs li + li::before { content: "›"; margin-right: 4px; color: var(--text-3); }

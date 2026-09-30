@@ -9,7 +9,7 @@ const exampleEnv = parseEnv(readFileSync(join(__dirname, '../../../.env.example'
 
 describe('api config', () => {
   it('uses safe defaults when nothing is set', () => {
-    expect(loadApiConfig({ DATABASE_URL: 'x' })).toEqual({ APP_ENV: 'local', PORT: 3001, LOG_LEVEL: 'info', DATABASE_URL: 'x', METRICS_REFRESH_MINUTES: 360, METADATA_REFRESH_MINUTES: 1_440 });
+    expect(loadApiConfig({ DATABASE_URL: 'x' })).toEqual({ APP_ENV: 'local', PORT: 3001, LOG_LEVEL: 'info', DATABASE_URL: 'x', METRICS_REFRESH_MINUTES: 360, METADATA_REFRESH_MINUTES: 1_440, SEO_MIN_MEMBERS: 1_000, SEO_MIN_HISTORY_DAYS: 7 });
   });
 
   it('accepts .env.example as-is', () => {

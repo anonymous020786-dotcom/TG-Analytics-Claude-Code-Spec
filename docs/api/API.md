@@ -61,3 +61,9 @@ Errors: `400 invalid_query` / `invalid_cursor`; unknown key → 404. `Cache-Cont
 ### `GET /api/v1/methodology`
 
 Metric definitions from the registry (FR-ANL-01): source, observation time, calculation, window, missing-data behaviour, freshness and methodology version. Documentation only; no flag. `Cache-Control: public, max-age=3600`.
+
+## SEO support (PHASE-14, implemented)
+
+- `GET /api/v1/channels/:username` also returns `seo: { indexable }`: the master switch `seo.indexing` AND the indexation rule (ADR-016). Additive field; existing clients are unaffected.
+- `GET /api/v1/seo/settings` returns `{ indexing, policy: { minMembers, minHistoryDays, maxAgeHours } }`. `Cache-Control: public, max-age=60`.
+- `GET /api/v1/seo/channels?limit=1..5000&cursor=` returns `data: [{ username, lastModified }]` and `page: { nextCursor }`: channels indexable right now, keyset-paged, for the sitemap. It is empty while `seo.indexing` is off. Errors: `400 invalid_query`. `Cache-Control: public, max-age=600`.
