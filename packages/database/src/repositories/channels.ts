@@ -1,7 +1,7 @@
 import type { Database } from '../client';
 import type { FailureClass } from '@tga/types';
 import { type Channel, Prisma } from '../generated/prisma/client';
-import { clampLimit, decodeCursor, toPage, type Page } from '../pagination';
+import { clampLimit, decodeCursor, MAX_PAGE_SIZE, toPage, type Page } from '../pagination';
 
 /** Public entity as resolved from Telegram (mapped by the adapter). */
 export interface TelegramEntityInput {
@@ -46,6 +46,15 @@ function isRetryableConflict(error: unknown): boolean {
 /** Usernames are stored lowercase without "@" (schema CHECK). */
 export function normalizeUsername(username: string): string {
   return username.trim().replace(/^@/, '').toLowerCase();
+}
+
+export interface PublicChannelCard {
+  id: string;
+  username: string;
+  title: string;
+  type: string;
+  memberCount: bigint | null;
+  memberCountObservedAt: Date | null;
 }
 
 export interface ListChannelsInput {
@@ -209,6 +218,19 @@ export class ChannelRepository {
   }
 
   /** Record a Telegram-side status change without touching history (DATA-POLICY §6). */
+  /**
+   * Public identity cards for a bounded set of ids (PHASE-13 ranking pages). Only visible
+   * entities (not hidden, active, public username) are returned; callers keep their own order.
+   */
+  async publicCards(ids: readonly string[]): Promise<PublicChannelCard[]> {
+    if (ids.length === 0) return [];
+    if (ids.length > MAX_PAGE_SIZE) throw new RangeError(`publicCards accepts at most ${MAX_PAGE_SIZE} ids`);
+    return this.db.channel.findMany({
+      where: { id: { in: [...ids] }, hiddenAt: null, status: 'active', username: { not: null } },
+      select: { id: true, username: true, title: true, type: true, memberCount: true, memberCountObservedAt: true },
+    }) as Promise<PublicChannelCard[]>;
+  }
+
   /** Channel plus its previous usernames (most recent first) for the search index (PHASE-12). */
   async searchSource(channelId: string): Promise<{ channel: Channel; aliases: string[] } | null> {
     const channel = await this.db.channel.findUnique({

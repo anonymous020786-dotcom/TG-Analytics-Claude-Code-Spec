@@ -45,6 +45,7 @@ $S worker-scheduler node workers/scheduler/dist/flags-cli.js set search.public o
 
 ```sh
 node scripts/staging/smoke.mjs http://127.0.0.1:8080 --channel telegram
+node scripts/e2e/public-routes.mjs http://127.0.0.1:8080 --channel telegram --rankings off --search on   # PHASE-13
 ```
 
 If port 8080 is taken on the host, set `STAGING_HTTP_PORT` (e.g. `8088`) for both `up` and the smoke URL.

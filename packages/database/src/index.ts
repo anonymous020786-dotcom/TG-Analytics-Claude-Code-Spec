@@ -6,6 +6,7 @@ export {
   type ChannelQualityView,
   type ChannelStatus,
   type ListChannelsInput,
+  type PublicChannelCard,
   type TelegramEntityInput,
   type UpsertResult,
 } from './repositories/channels';
