@@ -1,0 +1,146 @@
+/* @tga/ui design tokens and primitives (PHASE-15).
+   Target: WCAG 2.2 AA (D-020). Every text/surface and control/surface pair
+   below is checked by src/contrast.test.ts, which parses this file. Dark mode is its own
+   selected set of steps, not an inversion. Status colors are reserved for state and always
+   ship with an icon and a text label. */
+:root {
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ef;
+  --border: #e3e2dd;          /* decorative separators only */
+  --control-border: #7c7b76;  /* inputs, buttons, tabs: >= 3:1 (WCAG 1.4.11) */
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-3: #6d6c68;
+  --link: #1c5cab;
+  --focus: #2a78d6;
+  --series-1: #2a78d6;
+  --grid: #e8e7e2;
+  --good: #0a7d0a;
+  --warn: #8a5a00;
+  --bad: #b3261e;
+  --info: #1c5cab;
+  --radius: 8px;
+  --gutter: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --tap: 44px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #1a1a19;
+    --surface-2: #242423;
+    --border: #383835;
+    --control-border: #8e8d86;
+    --text: #ffffff;
+    --text-2: #c3c2b7;
+    --text-3: #a3a298;
+    --link: #86b6ef;
+    --focus: #86b6ef;
+    --series-1: #3987e5;
+    --grid: #33332f;
+    --good: #5cc45c;
+    --warn: #f0b64a;
+    --bad: #ff8a80;
+    --info: #86b6ef;
+    color-scheme: dark;
+  }
+}
+
+/* Base */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--link); text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 var(--space-2); overflow-wrap: anywhere; }
+h2 { font-size: 1.2rem; margin: var(--space-8) 0 var(--space-2); }
+h3 { font-size: 1rem; margin: var(--space-4) 0 var(--space-1); }
+.ui-muted { color: var(--text-2); }
+.ui-small { font-size: 14px; }
+.ui-visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.ui-skip { position: absolute; left: -9999px; }
+.ui-skip:focus { left: var(--gutter); top: var(--space-2); background: var(--surface); padding: var(--space-1) var(--space-2); z-index: 10; }
+
+/* Controls */
+input, select, textarea, .ui-button {
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--control-border); border-radius: 6px;
+  padding: var(--space-2) 10px; min-height: var(--tap);
+}
+.ui-button { cursor: pointer; background: var(--surface-2); font-weight: 600; }
+.ui-button[data-variant="primary"] { background: var(--link); color: var(--surface); border-color: var(--link); }
+.ui-button:disabled, .ui-button[aria-disabled="true"] { cursor: not-allowed; opacity: .6; }
+.ui-field { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--text-2); }
+.ui-field .ui-hint { font-size: 13px; }
+.ui-field .ui-error { color: var(--bad); font-size: 13px; }
+.ui-field [aria-invalid="true"] { border-color: var(--bad); }
+
+/* Surfaces */
+.ui-card { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); background: var(--surface); }
+.ui-card > h3 { font-size: 14px; font-weight: 600; color: var(--text-2); margin: 0 0 var(--space-1); }
+.ui-stat-value { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 0; overflow-wrap: anywhere; }
+.ui-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); }
+
+/* Alerts and states: tone is always icon + text, never color alone */
+.ui-alert { display: flex; gap: var(--space-2); border: 1px solid var(--border); border-left-width: 4px; border-radius: var(--radius); padding: var(--space-3) var(--space-4); background: var(--surface-2); }
+.ui-alert > .ui-alert-icon { flex: none; font-weight: 700; }
+.ui-alert > div > :first-child { margin-top: 0; }
+.ui-alert > div > :last-child { margin-bottom: 0; }
+.ui-alert[data-tone="info"] { border-left-color: var(--info); }
+.ui-alert[data-tone="success"] { border-left-color: var(--good); }
+.ui-alert[data-tone="warning"] { border-left-color: var(--warn); }
+.ui-alert[data-tone="error"] { border-left-color: var(--bad); }
+.ui-alert[data-tone="info"] .ui-alert-icon { color: var(--info); }
+.ui-alert[data-tone="success"] .ui-alert-icon { color: var(--good); }
+.ui-alert[data-tone="warning"] .ui-alert-icon { color: var(--warn); }
+.ui-alert[data-tone="error"] .ui-alert-icon { color: var(--bad); }
+
+.ui-badge { display: inline-flex; align-items: center; gap: var(--space-1); font-size: 14px; font-weight: 600; }
+.ui-badge[data-tone="good"] { color: var(--good); }
+.ui-badge[data-tone="warning"] { color: var(--warn); }
+.ui-badge[data-tone="bad"] { color: var(--bad); }
+.ui-badge[data-tone="neutral"] { color: var(--text-2); }
+
+.ui-skeleton { display: block; background: var(--surface-2); border-radius: var(--radius); animation: ui-pulse 1.4s ease-in-out infinite; }
+@keyframes ui-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .ui-skeleton { animation: none; } }
+
+/* Navigation */
+.ui-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-2) 0; padding: 0; list-style: none; }
+.ui-tabs a { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--space-3); border: 1px solid var(--control-border); border-radius: 999px; text-decoration: none; }
+.ui-tabs a[aria-current="page"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.ui-pager { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
+.ui-pager a { display: inline-flex; align-items: center; min-height: var(--tap); }
+
+/* Tables: scroll inside a focusable region, never the page */
+.ui-table-region { overflow-x: auto; }
+.ui-table-region:focus-visible { outline-offset: 0; }
+.ui-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.ui-table caption { text-align: left; color: var(--text-2); font-size: 14px; padding-bottom: var(--space-1); }
+.ui-table th, .ui-table td { text-align: left; padding: 6px var(--space-2); border-bottom: 1px solid var(--border); }
+.ui-table [data-numeric="true"] { text-align: right; }
+
+/* Definition lists */
+.ui-defs { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: var(--space-1) var(--space-4); margin: var(--space-2) 0; }
+.ui-defs dt { color: var(--text-2); }
+.ui-defs dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .ui-defs { grid-template-columns: 1fr; } .ui-defs dd { margin-bottom: var(--space-2); } }
+
+@media (forced-colors: active) {
+  .ui-alert, .ui-card, .ui-tabs a { border-color: CanvasText; }
+  .ui-tabs a[aria-current="page"] { outline: 2px solid CanvasText; }
+}

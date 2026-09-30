@@ -12,4 +12,4 @@ Possible inputs: subscriber growth velocity, view velocity, recent activity, eng
 - **Windows and tolerances:** as in `GROWTH_WINDOWS` (1 d baseline ±12 h, 7 d baseline ±1 d; current value ≤ 1 day old). Anomalous observations are excluded.
 - **Unavailable** when either input is unavailable. No partial scores.
 - **Eligibility:** current members ≥ 1,000.
-- **Status:** the weights and eligibility are a proposal pending **OD-015**. It's labelled as a calculated signal, not an official Telegram ranking.
+- **Status:** the weights and eligibility were approved as **D-019** (2026-09-30). It's labelled as a calculated signal, not an official Telegram ranking.

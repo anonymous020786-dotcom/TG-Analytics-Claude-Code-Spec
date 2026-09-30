@@ -1,3 +1,4 @@
+import { Alert } from '@tga/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Breadcrumbs } from '../../../../components/Seo';
@@ -31,12 +32,11 @@ export default async function PostsPage({ params }: Props) {
         ]}
       />
       <h1>Posts</h1>
-      <div className="notice">
-        <p>Post data is not available yet.</p>
+      <Alert tone="info" title="Post data is not available yet.">
         <p className="small">
           Post history, views and reactions can only be read through Telegram&apos;s user API, which TG Analytics has not enabled yet. Until then no post figures are shown, rather than showing zeros.
         </p>
-      </div>
+      </Alert>
       <p>
         <Link href={`/channel/${c.username}/statistics`}>Subscriber statistics</Link>
       </p>

@@ -23,3 +23,22 @@ A route-level `loading.tsx` makes Next.js start streaming a `200` response befor
 - **Progressive enhancement:** search and filters are plain GET forms; autocomplete (ARIA combobox, keyboard) enhances them.
 - **Telegram text is untrusted:** rendered as text only (no raw HTML sinks; THREAT-MODEL T03).
 - **Mobile-first:** single column, 16 px gutter, 44 px touch targets, no horizontal scroll (tables scroll inside their own container).
+
+## Design system (PHASE-15, `packages/ui`)
+
+- **Tokens** live in `@tga/ui/styles.css`: surfaces, text, link, focus, control border, status and chart colors, spacing, 44 px tap size. Dark mode is its own selected set. `src/contrast.test.ts` parses the file and checks every text pair at 4.5:1 and every control, focus and graphic pair at 3:1 in both themes.
+- **Primitives** are server-compatible React with no framework imports:
+  - Button, Card, StatCard/StatGrid, Alert, EmptyState, Skeleton;
+  - StatusBadge/FreshnessBadge, Field;
+  - LinkTabs, CursorPager (these take the app's `Link`);
+  - DataTable, DefinitionList, SkipLink, VisuallyHidden.
+- **Accessibility contract built into the components:**
+  - tone is always icon + text (never color alone);
+  - unavailable metrics render explicit text (never 0);
+  - fields wire `aria-describedby`/`aria-invalid`;
+  - live alerts use `role=alert` for errors and `role=status` otherwise;
+  - wide tables scroll inside a labelled, focusable region;
+  - skeletons announce once;
+  - list-style links have targets of at least 24 px (2.5.8);
+  - autocomplete announces the suggestion count politely.
+- **Target:** WCAG 2.2 AA (D-020).

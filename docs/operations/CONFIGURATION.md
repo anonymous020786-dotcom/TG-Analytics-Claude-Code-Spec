@@ -100,7 +100,7 @@ No new variables. Feature flags:
 |---|---|---|
 | `slice.channel-page` | off | `/channel/[username]` and its sub-pages; `GET /api/v1/channels/:username` and `/:id/stats` |
 | `search.public` | off | `/search`, `/channels`, home "largest" list; `GET /api/v1/channels`, `/search/suggest` |
-| `rankings.public` | off | `/rankings`, `/trending`, their nav links; `GET /api/v1/rankings*`, `/trending`. **Keep off until OD-015 is approved.** |
+| `rankings.public` | off | `/rankings`, `/trending`, their nav links; `GET /api/v1/rankings*`, `/trending`. Parameters approved (D-019): enable when rankings should be public. |
 
 The web app reads the API only server-side (`API_INTERNAL_URL`). Browser autocomplete calls `/api/v1/search/suggest` on the same origin, routed by the edge proxy; without the proxy (plain local dev) suggestions are simply absent.
 

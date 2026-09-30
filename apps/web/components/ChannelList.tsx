@@ -33,6 +33,3 @@ export function ChannelList({ rows, label }: { rows: ListRow[]; label: string })
   );
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return <div className="notice">{children}</div>;
-}

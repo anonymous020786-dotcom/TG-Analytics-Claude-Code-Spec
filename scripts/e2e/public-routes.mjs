@@ -97,7 +97,7 @@ if (rankingsOn) {
   await check('trending: labelled as a calculated signal', () => ok('/trending', 'Not official Telegram data', 'How this ranking is calculated'));
   await check('nav shows rankings', () => ok('/', 'href="/rankings"'));
 } else {
-  await check('rankings and trending are 404 until OD-015 is approved', async () => {
+  await check('rankings and trending are 404 while rankings.public is off', async () => {
     await missing('/rankings');
     await missing('/trending');
     const home = await page('/');

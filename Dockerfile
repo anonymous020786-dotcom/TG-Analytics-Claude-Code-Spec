@@ -23,6 +23,7 @@ COPY packages/validation/package.json packages/validation/
 COPY workers/discovery/package.json workers/discovery/
 COPY packages/queues/package.json packages/queues/
 COPY packages/analytics/package.json packages/analytics/
+COPY packages/ui/package.json packages/ui/
 COPY workers/metrics/package.json workers/metrics/
 COPY workers/metadata/package.json workers/metadata/
 COPY workers/scheduler/package.json workers/scheduler/
@@ -33,7 +34,7 @@ FROM manifests AS build
 RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \
     pnpm install --frozen-lockfile --store-dir /pnpm/store --cache-dir /pnpm/cache
 COPY . .
-RUN pnpm --filter "@tga/api..." --filter "@tga/web" --filter "@tga/worker-*..." build
+RUN pnpm --filter "@tga/api..." --filter "@tga/web..." --filter "@tga/worker-*..." build
 
 FROM manifests AS api-deps
 RUN --mount=type=cache,id=tga-pnpm-store,target=/pnpm/store --mount=type=cache,id=tga-pnpm-cache,target=/pnpm/cache \

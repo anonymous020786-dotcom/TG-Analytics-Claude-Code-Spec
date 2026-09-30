@@ -1,114 +1,48 @@
-/* Minimal public-web styles (PHASE-13). The full design system is PHASE-15.
-   Chart colors follow the validated reference palette (dataviz): series-1 blue,
-   dark mode uses its own selected steps, not an automatic inversion. */
-:root {
-  --surface: #fcfcfb;
-  --surface-2: #f3f2ef;
-  --border: #e3e2dd;
-  --text: #0b0b0b;
-  --text-2: #52514e;
-  --text-3: #6d6c68;
-  --link: #1c5cab;
-  --series-1: #2a78d6;
-  --grid: #e8e7e2;
-  --good: #0a7d0a;
-  --warn: #8a5a00;
-  --bad: #b3261e;
-  --radius: 8px;
-  --gutter: 16px;
-  color-scheme: light;
-}
+/* App-specific styles. Tokens, base, controls and primitives come from @tga/ui/styles.css
+   (imported first in the root layout); this file only lays out the site chrome, lists,
+   search autocomplete and the chart. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --surface: #1a1a19;
-    --surface-2: #242423;
-    --border: #383835;
-    --text: #ffffff;
-    --text-2: #c3c2b7;
-    --text-3: #a3a298;
-    --link: #86b6ef;
-    --series-1: #3987e5;
-    --grid: #33332f;
-    --good: #5cc45c;
-    --warn: #f0b64a;
-    --bad: #ff8a80;
-    color-scheme: dark;
-  }
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--surface);
-  color: var(--text);
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-}
-a { color: var(--link); }
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
-  outline: 2px solid var(--series-1);
-  outline-offset: 2px;
-}
-
-.skip { position: absolute; left: -9999px; }
-.skip:focus { left: var(--gutter); top: 8px; background: var(--surface); padding: 4px 8px; z-index: 10; }
-
-.site-header { border-bottom: 1px solid var(--border); }
-.site-header .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
-.brand { font-weight: 700; text-decoration: none; color: var(--text); }
-.nav { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; margin: 0; padding: 0; }
-.nav a { text-decoration: none; }
-.nav a:hover { text-decoration: underline; }
-
-.wrap { max-width: 960px; margin: 0 auto; padding: 12px var(--gutter); }
-main.wrap { padding-top: 24px; padding-bottom: 40px; }
-.site-footer { border-top: 1px solid var(--border); color: var(--text-2); font-size: 14px; }
-
-h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 8px; overflow-wrap: anywhere; }
-h2 { font-size: 1.2rem; margin: 32px 0 8px; }
 .muted { color: var(--text-2); }
 .small { font-size: 14px; }
-.kicker { color: var(--text-2); font-size: 14px; margin: 0 0 4px; }
+.kicker { color: var(--text-2); font-size: 14px; margin: 0 0 var(--space-1); }
 
-.big-number { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 0; }
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; background: var(--surface); }
-.card h3 { font-size: 14px; font-weight: 600; color: var(--text-2); margin: 0 0 4px; }
+/* Site chrome */
+.site-header { border-bottom: 1px solid var(--border); }
+.site-header .bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) 20px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); display: inline-flex; align-items: center; min-height: var(--tap); }
+.nav { display: flex; flex-wrap: wrap; gap: 0 var(--space-4); list-style: none; margin: 0; padding: 0; }
+.nav a { display: inline-flex; align-items: center; min-height: var(--tap); text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.wrap { max-width: 960px; margin: 0 auto; padding: var(--space-3) var(--gutter); }
+main.wrap { padding-top: var(--space-6); padding-bottom: 40px; }
+.site-footer { border-top: 1px solid var(--border); color: var(--text-2); font-size: 14px; }
 
+.crumbs { display: flex; flex-wrap: wrap; gap: var(--space-1); list-style: none; margin: 0 0 var(--space-2); padding: 0; }
+.crumbs li + li::before { content: "›"; margin-right: var(--space-1); color: var(--text-3); }
+/* WCAG 2.2 2.5.8: list links (not inline in a sentence) get >= 24px targets. */
+.crumbs a, .crumbs [aria-current] { display: inline-flex; align-items: center; min-height: 24px; }
+
+/* Channel lists */
 .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
-.list li { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); padding: 10px 0; border-bottom: 1px solid var(--border); }
 .list .pos { min-width: 2.5ch; color: var(--text-2); font-variant-numeric: tabular-nums; text-align: right; }
-.list .name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.list .name { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
 .list .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-.form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 8px 0 16px; }
-.form label { display: flex; flex-direction: column; font-size: 14px; color: var(--text-2); gap: 2px; }
-input, select, button {
-  font: inherit; color: var(--text); background: var(--surface);
-  border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; min-height: 44px;
-}
-button { cursor: pointer; background: var(--surface-2); }
+/* Search and filter forms */
+.form { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; margin: var(--space-2) 0 var(--space-4); }
 .search-field { flex: 1 1 260px; position: relative; }
 .search-field input { width: 100%; }
-
-.suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; list-style: none; margin: 4px 0 0; padding: 4px 0;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 16px rgb(0 0 0 / 12%); }
-.suggest li { padding: 8px 12px; cursor: pointer; }
+.suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; list-style: none; margin: var(--space-1) 0 0; padding: var(--space-1) 0;
+  background: var(--surface); border: 1px solid var(--control-border); border-radius: 6px; box-shadow: 0 4px 16px rgb(0 0 0 / 12%); }
+.suggest li { padding: var(--space-2) var(--space-3); min-height: var(--tap); cursor: pointer; }
 .suggest li[aria-selected="true"], .suggest li:hover { background: var(--surface-2); }
 
-.notice { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; background: var(--surface-2); }
-.pager { display: flex; gap: 16px; margin-top: 16px; }
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.tabs a { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; }
-.tabs a[aria-current="page"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
-
-.skeleton { background: var(--surface-2); border-radius: var(--radius); animation: pulse 1.4s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: .55; } }
-@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+details { margin: var(--space-2) 0; }
+details > summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; }
 
 /* Chart (single series; the heading names it, so no legend). */
-.chart { margin: 8px 0; }
+.chart { margin: var(--space-2) 0; }
 .chart svg { display: block; width: 100%; height: auto; }
 .chart .grid line { stroke: var(--grid); stroke-width: 1; }
 .chart .axis text { fill: var(--text-2); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -123,26 +57,13 @@ button { cursor: pointer; background: var(--surface-2); }
 .chart .mark { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
 .chart .readout { fill: var(--text); font-size: 12px; font-weight: 600; }
 
-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-td.num, th.num { text-align: right; }
-.table-scroll { overflow-x: auto; }
-details { margin: 8px 0; }
-dl.defs { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: 4px 16px; margin: 8px 0; }
-dl.defs dt { color: var(--text-2); }
-dl.defs dd { margin: 0; }
-@media (max-width: 480px) { dl.defs { grid-template-columns: 1fr; } dl.defs dd { margin-bottom: 8px; } }
-
-@media (forced-colors: active) {
-  .chart .line { stroke: CanvasText; }
-  .chart .dot, .chart .mark { fill: CanvasText; }
-}
-
 /* SVG text is in viewBox units (640 wide): on narrow screens the chart scales down ~2x, so
    labels are enlarged to stay >= ~11px on screen. */
 @media (max-width: 600px) {
   .chart .axis text, .chart .end-label, .chart .readout { font-size: 22px; }
 }
 
-.crumbs { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0 0 8px; padding: 0; }
-.crumbs li + li::before { content: "›"; margin-right: 4px; color: var(--text-3); }
+@media (forced-colors: active) {
+  .chart .line { stroke: CanvasText; }
+  .chart .dot, .chart .mark { fill: CanvasText; }
+}

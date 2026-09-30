@@ -118,7 +118,7 @@ describe('rankings and trending', () => {
     await rankings.saveRun({ rankingKey: key, methodologyVersion: version, asOf: at(0), eligibleCount: ids.length, entries: ids.map((id, i) => ({ position: i + 1, channelId: id, score: 1000 - i })) });
   }
 
-  it('is hidden (404) until rankings.public is enabled (OD-015)', async () => {
+  it('is hidden (404) while rankings.public is off', async () => {
     for (const path of ['/api/v1/rankings', '/api/v1/rankings/top-subscribers', '/api/v1/trending']) expect((await get(path)).status).toBe(404);
   });
 

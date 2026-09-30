@@ -1,3 +1,4 @@
+import { DefinitionList } from '@tga/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -39,28 +40,18 @@ export default async function DocsPage() {
       {result.data.metrics.map((m) => (
         <section key={m.key} aria-labelledby={`m-${m.key}`}>
           <h3 id={`m-${m.key}`}>{m.label}</h3>
-          <dl className="defs small">
-            <dt>Type</dt>
-            <dd>{m.kind === 'raw' ? 'Observed value' : 'Calculated value'}</dd>
-            <dt>Source</dt>
-            <dd>{m.source}</dd>
-            <dt>Observed at</dt>
-            <dd>{m.observationTime}</dd>
-            <dt>Calculation</dt>
-            <dd>{m.calculation}</dd>
-            {m.window ? (
-              <>
-                <dt>Window</dt>
-                <dd>{m.window}</dd>
-              </>
-            ) : null}
-            <dt>Missing data</dt>
-            <dd>{m.missingData}</dd>
-            <dt>Freshness</dt>
-            <dd>{m.freshness}</dd>
-            <dt>Version</dt>
-            <dd>{m.methodologyVersion}</dd>
-          </dl>
+          <DefinitionList
+            items={[
+              { key: 'type', term: 'Type', description: m.kind === 'raw' ? 'Observed value' : 'Calculated value' },
+              { key: 'source', term: 'Source', description: m.source },
+              { key: 'observed', term: 'Observed at', description: m.observationTime },
+              { key: 'calc', term: 'Calculation', description: m.calculation },
+              ...(m.window ? [{ key: 'window', term: 'Window', description: m.window }] : []),
+              { key: 'missing', term: 'Missing data', description: m.missingData },
+              { key: 'fresh', term: 'Freshness', description: m.freshness },
+              { key: 'version', term: 'Version', description: m.methodologyVersion },
+            ]}
+          />
         </section>
       ))}
 

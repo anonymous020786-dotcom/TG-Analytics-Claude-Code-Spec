@@ -34,7 +34,7 @@ const DISCLAIMER = 'Calculated by TG Analytics from public data; not an official
 
 /**
  * Initial definitions (methodology v1). Eligibility bases and trending weights are proposals
- * pending owner approval (OD-015) and are versioned: any change bumps the version.
+ * approved by the owner (D-019) and are versioned: any change bumps the version.
  */
 export const RANKINGS: readonly RankingDefinition[] = [
   {
@@ -102,7 +102,7 @@ export function rank(definition: RankingDefinition, candidates: readonly Ranking
   };
 }
 
-/** trending-v1 weights (TRENDING.md: documented and versioned). Proposal pending OD-015. */
+/** trending-v1 weights (TRENDING.md: documented and versioned). Approved as D-019. */
 export const TRENDING_V1 = { version: 'trending-v1', weight1d: 0.7, weight7d: 0.3 } as const;
 
 /**

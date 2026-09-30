@@ -3,8 +3,8 @@ import { type ChannelRepository, DEFAULT_PAGE_SIZE, type FeatureFlagRepository, 
 import { FlagGate } from '../common/flag-gate';
 
 /**
- * Public display of rankings/trending. Off until the owner approves the v1 parameters
- * (OD-015: "needed by PHASE-13, first public display"). Unknown flags are off.
+ * Public display of rankings/trending (parameters approved as D-019). An operational switch:
+ * unknown flags are off.
  */
 export const RANKINGS_FLAG = 'rankings.public';
 
