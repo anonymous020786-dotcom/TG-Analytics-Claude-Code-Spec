@@ -2,7 +2,7 @@
 
 export default function ChannelError({ reset }: { error: Error; reset: () => void }) {
   return (
-    <main>
+    <main id="main" className="wrap">
       <h1>Something went wrong</h1>
       <p>We could not load this channel right now.</p>
       <button type="button" onClick={() => reset()}>

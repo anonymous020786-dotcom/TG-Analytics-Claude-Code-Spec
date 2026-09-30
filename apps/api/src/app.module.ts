@@ -2,19 +2,37 @@ import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import type { ChannelReader } from './channels/channel-reader';
 import { CHANNEL_READER, ChannelsController } from './channels/channels.controller';
 import { HealthController } from './health/health.controller';
+import { MethodologyController, RANKINGS_READER, RankingsController, STATS_READER, StatsController } from './public-data.controller';
+import type { RankingsReader } from './rankings/rankings-reader';
 import type { SearchReader } from './search/search-reader';
 import { ChannelListController, SEARCH_READER, SearchController } from './search/search.controller';
+import type { StatsReader } from './stats/stats-reader';
+
+export interface AppReaders {
+  channelReader?: ChannelReader;
+  searchReader?: SearchReader;
+  statsReader?: StatsReader;
+  rankingsReader?: RankingsReader;
+}
 
 @Module({})
 export class AppModule {
   /** Data routes are registered only when their reader (database) is provided. */
-  static register(options: { channelReader?: ChannelReader; searchReader?: SearchReader } = {}): DynamicModule {
-    const controllers: DynamicModule['controllers'] = [HealthController];
+  static register(options: AppReaders = {}): DynamicModule {
+    const controllers: NonNullable<DynamicModule['controllers']> = [HealthController, MethodologyController];
     const providers: Provider[] = [];
     if (options.searchReader) {
       // Registered before ChannelsController so GET /channels is never shadowed.
       controllers.push(ChannelListController, SearchController);
       providers.push({ provide: SEARCH_READER, useValue: options.searchReader });
+    }
+    if (options.statsReader) {
+      controllers.push(StatsController);
+      providers.push({ provide: STATS_READER, useValue: options.statsReader });
+    }
+    if (options.rankingsReader) {
+      controllers.push(RankingsController);
+      providers.push({ provide: RANKINGS_READER, useValue: options.rankingsReader });
     }
     if (options.channelReader) {
       controllers.push(ChannelsController);

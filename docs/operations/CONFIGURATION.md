@@ -92,6 +92,18 @@ Feature flag `slice.channel-page` (default off) gates the endpoint and page: `pn
 
 No new variables. Feature flag `search.public` (default off) gates `GET /api/v1/channels` and `GET /api/v1/search/suggest`: `pnpm --filter @tga/worker-scheduler flags:local set search.public on --actor <operator-id>`. Engine and relevance: ADR-015.
 
+### Public web (PHASE-13)
+
+No new variables. Feature flags:
+
+| Flag | Default | Gates |
+|---|---|---|
+| `slice.channel-page` | off | `/channel/[username]` and its sub-pages; `GET /api/v1/channels/:username` and `/:id/stats` |
+| `search.public` | off | `/search`, `/channels`, home "largest" list; `GET /api/v1/channels`, `/search/suggest` |
+| `rankings.public` | off | `/rankings`, `/trending`, their nav links; `GET /api/v1/rankings*`, `/trending`. **Keep off until OD-015 is approved.** |
+
+The web app reads the API only server-side (`API_INTERNAL_URL`). Browser autocomplete calls `/api/v1/search/suggest` on the same origin, routed by the edge proxy; without the proxy (plain local dev) suggestions are simply absent.
+
 ### Staging variables (PHASE-11B)
 
 | Variable | Used by | Purpose | Default | Secret |
