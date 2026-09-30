@@ -1,6 +1,6 @@
 # ADR-016 — SEO Metadata and Indexation Gate
 
-Status: Accepted (PHASE-14, 2026-09-30). Threshold values: proposal pending OD-008. Production domain: OD-016.
+Status: Accepted (PHASE-14, 2026-09-30). Threshold values approved (D-018, was OD-008). Production domain: OD-016.
 
 ## Context
 
@@ -24,7 +24,7 @@ SEO.md requires unique titles and descriptions, canonical URLs, robots, Open Gra
   - has a current observation that is not flagged anomalous;
   - has at least `SEO_MIN_HISTORY_DAYS` of history (an observation at least that old exists).
 
-  `ChannelRepository.indexableWhere` is used by both the per-page check and the sitemap, so they cannot disagree. The thresholds are configuration, with defaults 1,000 and 7 days, **proposed for OD-008**.
+  `ChannelRepository.indexableWhere` is used by both the per-page check and the sitemap, so they cannot disagree. The thresholds are configuration, with defaults 1,000 and 7 days, **approved as D-018**.
 - **Fail closed.** The web reads the switch through a 15 s in-process memo. An API error means "not indexing", and the root layout defaults to `noindex`. The staging edge always adds `X-Robots-Tag: noindex` and its own disallow-all `robots.txt`.
 - **Canonical URLs** come from `PUBLIC_SITE_URL` (origin only, validated). Query variants (`?days`, `?cursor`, filters) canonicalize to the base path. `?ranking=` is kept because it identifies distinct content. Alias usernames already 308-redirect to the current one.
 - **Structured data:**
