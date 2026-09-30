@@ -48,6 +48,17 @@ export function normalizeUsername(username: string): string {
   return username.trim().replace(/^@/, '').toLowerCase();
 }
 
+/** Thresholds for the indexation rule (OD-008 pending: values are configuration, not constants). */
+export interface IndexabilityPolicy {
+  minMembers: bigint;
+  minHistoryDays: number;
+  /** Maximum age of the current member count (normally 2x the metrics refresh interval). */
+  maxAgeMs: number;
+}
+
+/** Sitemap files hold at most 50,000 URLs; pages are far smaller. */
+export const MAX_SITEMAP_PAGE = 5_000;
+
 export interface PublicChannelCard {
   id: string;
   username: string;
@@ -229,6 +240,52 @@ export class ChannelRepository {
       where: { id: { in: [...ids] }, hiddenAt: null, status: 'active', username: { not: null } },
       select: { id: true, username: true, title: true, type: true, memberCount: true, memberCountObservedAt: true },
     }) as Promise<PublicChannelCard[]>;
+  }
+
+  /**
+   * Indexation rule (PHASE-14, SEO.md; thresholds provisional until OD-008). Single SQL
+   * definition shared by the per-page check and the sitemap, so they can never disagree:
+   * visible, collected OK, member count >= minimum, fresh, not anomalous, and observed for at
+   * least `minHistoryDays` (an observation at least that old exists).
+   */
+  private indexableWhere(policy: IndexabilityPolicy, now: Date): Prisma.Sql {
+    const freshSince = new Date(now.getTime() - policy.maxAgeMs);
+    const historySince = new Date(now.getTime() - policy.minHistoryDays * 86_400_000);
+    return Prisma.sql`c.hidden_at IS NULL AND c.status = 'active' AND c.username IS NOT NULL
+      AND c.collection_status = 'ok'
+      AND c.member_count >= ${policy.minMembers}
+      AND c.member_count_observed_at >= ${freshSince}
+      AND NOT EXISTS (
+        SELECT 1 FROM metric_anomalies a
+        WHERE a.channel_id = c.id AND a.metric = 'members' AND a.observed_at = c.member_count_observed_at
+      )
+      AND EXISTS (
+        SELECT 1 FROM channel_metric_snapshots s
+        WHERE s.channel_id = c.id AND s.metric = 'members' AND s.observed_at <= ${historySince}
+      )`;
+  }
+
+  async isIndexable(channelId: string, policy: IndexabilityPolicy, now: Date = new Date()): Promise<boolean> {
+    const [row] = await this.db.$queryRaw<{ ok: boolean }[]>`
+      SELECT EXISTS (SELECT 1 FROM channels c WHERE c.id = ${channelId}::uuid AND ${this.indexableWhere(policy, now)}) AS ok`;
+    return row?.ok ?? false;
+  }
+
+  /** Indexable channels for the sitemap, keyset-paginated by id (bounded page size). */
+  async indexablePage(policy: IndexabilityPolicy, input: { cursor?: string; limit: number }, now: Date = new Date()): Promise<Page<{ id: string; username: string; lastModified: Date }>> {
+    const limit = Math.min(Math.max(Math.trunc(input.limit) || 1, 1), MAX_SITEMAP_PAGE);
+    const after = input.cursor ? decodeCursor(input.cursor, { id: 'uuid' }).id : undefined;
+    const rows = await this.db.$queryRaw<{ id: string; username: string; last_modified: Date }[]>`
+      SELECT c.id, c.username, c.member_count_observed_at AS last_modified
+      FROM channels c
+      WHERE ${this.indexableWhere(policy, now)} ${after ? Prisma.sql`AND c.id > ${after}::uuid` : Prisma.empty}
+      ORDER BY c.id ASC
+      LIMIT ${limit + 1}`;
+    return toPage(
+      rows.map((r) => ({ id: r.id, username: r.username, lastModified: r.last_modified })),
+      limit,
+      (last) => ({ id: last.id }),
+    );
   }
 
   /** Channel plus its previous usernames (most recent first) for the search index (PHASE-12). */

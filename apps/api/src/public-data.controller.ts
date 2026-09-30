@@ -3,6 +3,7 @@ import { METRIC_REGISTRY } from '@tga/analytics';
 import type { Request } from 'express';
 import type { ApiError } from './channels/channels.controller';
 import type { RankingsReader, RankingsResult } from './rankings/rankings-reader';
+import type { SeoReader } from './seo/seo-reader';
 import type { StatsReader } from './stats/stats-reader';
 
 export const STATS_READER = Symbol('STATS_READER');
@@ -69,5 +70,27 @@ export class MethodologyController {
   @Header('Cache-Control', 'public, max-age=3600')
   methodology(@Req() req: Request) {
     return { data: { metrics: METRIC_REGISTRY }, meta: meta(req) };
+  }
+}
+
+export const SEO_READER = Symbol('SEO_READER');
+
+/** Indexing settings and sitemap source for the web app (PHASE-14). */
+@Controller('api/v1/seo')
+export class SeoController {
+  constructor(@Inject(SEO_READER) private readonly reader: SeoReader) {}
+
+  @Get('settings')
+  @Header('Cache-Control', 'public, max-age=60')
+  async settings(@Req() req: Request) {
+    return { data: await this.reader.settings(), meta: meta(req) };
+  }
+
+  @Get('channels')
+  @Header('Cache-Control', 'public, max-age=600')
+  async channels(@Query() query: Record<string, unknown>, @Req() req: Request) {
+    const result = await this.reader.sitemapChannels(query);
+    if (result.kind === 'invalid') fail(400, 'invalid_query', result.message, req);
+    return { data: result.value.items, page: { nextCursor: result.value.nextCursor }, meta: meta(req) };
   }
 }

@@ -15,6 +15,8 @@ worker-discovery/metadata/metrics ── egress network ──> api.telegram.org
 - Only the proxy publishes a port, bound to `127.0.0.1:8080` by default (`STAGING_BIND`, `STAGING_HTTP_PORT`).
 - The proxy adds security headers, `X-Robots-Tag: noindex`, and a `robots.txt` that disallows everything. It propagates `X-Request-Id`, writes JSON access logs, and applies per-IP rate limits (API 10 r/s, pages 20 r/s; provisional).
 - App containers are read-only, drop all capabilities, run as non-root and cannot escalate privileges.
+- The proxy re-resolves `api`/`web` through Docker DNS (`resolver 127.0.0.11`, `server … resolve`), so recreating a container does not leave traffic pointed at a recycled IP (found in PHASE-14).
+- Staging is never indexed: the edge adds `X-Robots-Tag: noindex` and serves a disallow-all `robots.txt`, whatever the `seo.indexing` flag says.
 
 ## Secrets
 
@@ -45,7 +47,7 @@ $S worker-scheduler node workers/scheduler/dist/flags-cli.js set search.public o
 
 ```sh
 node scripts/staging/smoke.mjs http://127.0.0.1:8080 --channel telegram
-node scripts/e2e/public-routes.mjs http://127.0.0.1:8080 --channel telegram --rankings off --search on   # PHASE-13
+node scripts/e2e/public-routes.mjs http://127.0.0.1:8080 --channel telegram --rankings off --search on --seo off   # PHASE-13/14
 ```
 
 If port 8080 is taken on the host, set `STAGING_HTTP_PORT` (e.g. `8088`) for both `up` and the smoke URL.

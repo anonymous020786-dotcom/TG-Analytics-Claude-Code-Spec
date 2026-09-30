@@ -1,10 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { fetchMethodology } from '../../lib/api';
+import { Breadcrumbs } from '../../components/Seo';
+import { fetchMethodology, indexingEnabled } from '../../lib/api';
+import { pageMetadata } from '../../lib/seo';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Methodology' };
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: 'Methodology',
+    description: 'How TG Analytics collects and calculates subscriber counts, growth and rankings for public Telegram channels and groups.',
+    path: '/docs',
+    indexable: await indexingEnabled(),
+  });
+}
 
 /** Public methodology (FR-ANL-01): every displayed metric with its definition, from the API registry. */
 export default async function DocsPage() {
@@ -12,6 +21,7 @@ export default async function DocsPage() {
   if (result.kind !== 'ok') notFound();
   return (
     <main id="main" className="wrap">
+      <Breadcrumbs crumbs={[{ name: 'Home', path: '/' }, { name: 'Methodology', path: '/docs' }]} />
       <h1>Methodology</h1>
       <p>
         TG Analytics reads public data about public Telegram channels and groups through Telegram&apos;s official APIs. It never reads private chats. All figures are calculated by TG Analytics and are not official Telegram statistics.

@@ -15,6 +15,8 @@ export interface ChannelReaderDeps {
   now?: () => Date;
   /** How long a flag lookup is cached in-process. */
   flagCacheMs?: number;
+  /** Search-engine indexability (PHASE-14); absent → never indexable. */
+  indexable?: (channelId: string) => Promise<boolean>;
 }
 
 type GrowthView = { available: true; absolute: string; percentage: number | null; previousAt: string; methodologyVersion: string } | { available: false; reason: string; methodologyVersion: string };
@@ -35,6 +37,8 @@ export interface ChannelView {
     metadata: { state: string; ageSeconds: number | null };
     lastCollectionErrorClass: string | null;
   };
+  /** Whether search engines may index this entity page (master flag AND data rule, OD-008). */
+  seo: { indexable: boolean };
   disclaimer: string;
 }
 
@@ -74,10 +78,11 @@ export class ChannelReader {
     const now = this.deps.now?.() ?? new Date();
     const from = new Date(now.getTime() - 9 * DAY);
     const to = new Date(now.getTime() + 1);
-    const [series, flagged, quality] = await Promise.all([
+    const [series, flagged, quality, indexable] = await Promise.all([
       this.deps.store.channelSeries({ entityId: channel.id, metric: MEMBERS, from, to }),
       this.deps.anomalies.forChannel(channel.id, MEMBERS, from, to),
       this.deps.channels.qualityView(channel.id),
+      this.deps.indexable ? this.deps.indexable(channel.id) : Promise.resolve(false),
     ]);
     const anomalous = new Set(flagged.map((a) => a.observedAt.getTime()));
     const points: Point[] = series.map((p) => ({ value: p.value, observedAt: p.observedAt, anomalous: anomalous.has(p.observedAt.getTime()) }));
@@ -106,6 +111,7 @@ export class ChannelReader {
           metadata: { state: q.metadata.state, ageSeconds: ageSeconds(q.metadata.ageMs) },
           lastCollectionErrorClass: q.lastCollectionErrorClass,
         },
+        seo: { indexable },
         disclaimer: DISCLAIMER,
       },
     };

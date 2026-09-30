@@ -2,6 +2,8 @@ export { createDatabase, DATABASE_DEFAULTS, type Database, type DatabaseOptions 
 export { clampLimit, DEFAULT_PAGE_SIZE, InvalidCursorError, MAX_PAGE_SIZE, type Page } from './pagination';
 export {
   ChannelRepository,
+  MAX_SITEMAP_PAGE,
+  type IndexabilityPolicy,
   normalizeUsername,
   type ChannelQualityView,
   type ChannelStatus,

@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ChartSection, ChartSkeleton } from '../../../../components/ChartSection';
+import { Breadcrumbs } from '../../../../components/Seo';
 import { requireChannel } from '../../../../lib/channel';
 import { CHART_WINDOWS, parseWindow, type SearchParams } from '../../../../lib/params';
+import { clampDescription, pageMetadata } from '../../../../lib/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +13,12 @@ type Props = { params: Promise<{ username: string }>; searchParams: Promise<Sear
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = await requireChannel((await params).username, '/statistics');
-  return { title: `Statistics: ${c.title} (@${c.username})`, robots: { index: false, follow: false } };
+  return pageMetadata({
+    title: `Subscriber statistics: ${c.title} (@${c.username})`,
+    description: clampDescription(`Daily subscriber history for ${c.title} (@${c.username}) over 7, 30, 90 and 365 days, with a data table. Calculated from public Telegram data.`),
+    path: `/channel/${c.username}/statistics`,
+    indexable: c.seo?.indexable === true,
+  });
 }
 
 export default async function StatisticsPage({ params, searchParams }: Props) {
@@ -21,9 +28,14 @@ export default async function StatisticsPage({ params, searchParams }: Props) {
 
   return (
     <main id="main" className="wrap">
-      <p className="kicker">
-        <Link href={`/channel/${c.username}`}>{c.title}</Link>
-      </p>
+      <Breadcrumbs
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Channels', path: '/channels' },
+          { name: c.title, path: `/channel/${c.username}` },
+          { name: 'Statistics', path: base },
+        ]}
+      />
       <h1>Subscriber statistics</h1>
       <nav className="tabs" aria-label="Time range">
         {CHART_WINDOWS.map((d) => (

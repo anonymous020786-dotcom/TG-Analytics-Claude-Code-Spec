@@ -104,6 +104,16 @@ No new variables. Feature flags:
 
 The web app reads the API only server-side (`API_INTERNAL_URL`). Browser autocomplete calls `/api/v1/search/suggest` on the same origin, routed by the edge proxy; without the proxy (plain local dev) suggestions are simply absent.
 
+### SEO (PHASE-14)
+
+| Variable | Used by | Purpose | Default | Secret |
+|---|---|---|---|---|
+| `SEO_MIN_MEMBERS` | api | Indexation rule: minimum subscribers for an indexable channel page (provisional, OD-008) | `1000` | no |
+| `SEO_MIN_HISTORY_DAYS` | api | Indexation rule: minimum days of collected history (provisional, OD-008) | `7` | no |
+| `PUBLIC_SITE_URL` | web (server only) | Public origin for canonical URLs, sitemap and Open Graph; `http(s)` origin, no path | `http://127.0.0.1:3000` | no |
+
+Feature flag `seo.indexing` (default off) is the master switch: while off, every page is `noindex`, `robots.txt` disallows everything and the sitemap is empty. The staging edge adds `X-Robots-Tag: noindex` and its own `robots.txt` regardless.
+
 ### Staging variables (PHASE-11B)
 
 | Variable | Used by | Purpose | Default | Secret |

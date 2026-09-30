@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ChartSection, ChartSkeleton } from '../../../components/ChartSection';
+import { Breadcrumbs, JsonLd } from '../../../components/Seo';
 import type { ChannelView } from '../../../lib/api';
 import { requireChannel } from '../../../lib/channel';
 import { formatAge, formatCount, formatPercent, formatSignedCount } from '../../../lib/format';
+import { channelDescription, channelJsonLd, pageMetadata } from '../../../lib/seo';
 
 // Server-rendered from the API, never indexable until PHASE-14.
 export const dynamic = 'force-dynamic';
@@ -13,7 +15,7 @@ type Props = { params: Promise<{ username: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = await requireChannel((await params).username);
-  return { title: `${c.title} (@${c.username})`, robots: { index: false, follow: false } };
+  return pageMetadata({ title: `${c.title} (@${c.username})`, description: channelDescription(c), path: `/channel/${c.username}`, indexable: c.seo?.indexable === true });
 }
 
 function Growth({ label, g }: { label: string; g: ChannelView['growth']['7d'] }) {
@@ -40,6 +42,8 @@ export default async function ChannelPage({ params }: Props) {
 
   return (
     <main id="main" className="wrap">
+      <Breadcrumbs crumbs={[{ name: 'Home', path: '/' }, { name: 'Channels', path: '/channels' }, { name: c.title, path: `/channel/${c.username}` }]} />
+      <JsonLd data={channelJsonLd(c, `/channel/${c.username}`)} />
       {/* 1. Identity */}
       <header>
         <p className="kicker">{c.type === 'group' ? 'Public group' : 'Public channel'}</p>

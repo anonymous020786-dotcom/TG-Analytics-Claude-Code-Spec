@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { assertListAvailable, FilterFields, ListResults } from '../../components/ListPage';
+import { indexingEnabled } from '../../lib/api';
 import { type ListQuery, parseListQuery, type SearchParams } from '../../lib/params';
+import { pageMetadata } from '../../lib/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +15,15 @@ function browseQuery(params: SearchParams): ListQuery {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  await assertListAvailable(browseQuery(await searchParams));
-  return { title: 'Channels and groups' };
+  const params = await searchParams;
+  await assertListAvailable(browseQuery(params));
+  const variant = Object.keys(params).length > 0; // filters or a cursor page
+  return pageMetadata({
+    title: 'Channels and groups',
+    description: 'Tracked public Telegram channels and groups by subscriber count, with growth and data freshness.',
+    path: '/channels',
+    indexable: !variant && (await indexingEnabled()),
+  });
 }
 
 export default async function ChannelsPage({ searchParams }: Props) {

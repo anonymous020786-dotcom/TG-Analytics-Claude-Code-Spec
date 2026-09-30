@@ -17,6 +17,7 @@ export interface ChannelView {
     metadata: { state: string; ageSeconds: number | null };
     lastCollectionErrorClass: string | null;
   };
+  seo?: { indexable: boolean };
   disclaimer: string;
 }
 
@@ -154,4 +155,39 @@ export async function rankingsAvailable(): Promise<boolean> {
   }
   navMemo = { value, at: now };
   return value;
+}
+
+const SEO_TTL_MS = 15_000;
+let seoMemo: { value: boolean; at: number } | undefined;
+
+/**
+ * Master indexing switch (flag seo.indexing), memoized for 15 s. Any failure means "not
+ * indexing" (fail closed: a broken API never makes pages indexable).
+ */
+export async function indexingEnabled(): Promise<boolean> {
+  const now = Date.now();
+  if (seoMemo && now - seoMemo.at < SEO_TTL_MS) return seoMemo.value;
+  let value: boolean;
+  try {
+    const r = await apiGet<{ data: { indexing: boolean } }>('/api/v1/seo/settings');
+    value = r.kind === 'ok' && r.data.data.indexing === true;
+  } catch {
+    value = false;
+  }
+  seoMemo = { value, at: now };
+  return value;
+}
+
+/** Indexable channel usernames for the sitemap, walking the API cursor (bounded). */
+export async function fetchSitemapChannels(maxUrls: number): Promise<{ username: string; lastModified: string }[]> {
+  const out: { username: string; lastModified: string }[] = [];
+  let cursor: string | null = null;
+  do {
+    const qs: string = cursor ? `?limit=5000&cursor=${encodeURIComponent(cursor)}` : '?limit=5000';
+    const r = await apiGet<{ data: { username: string; lastModified: string }[]; page: { nextCursor: string | null } }>(`/api/v1/seo/channels${qs}`);
+    if (r.kind !== 'ok') break;
+    out.push(...r.data.data);
+    cursor = r.data.page.nextCursor;
+  } while (cursor && out.length < maxUrls);
+  return out.slice(0, maxUrls);
 }

@@ -13,6 +13,9 @@ export const apiConfigSpec = defineConfig({
     /** Expected refresh intervals, used to judge freshness (same values as the scheduler). */
     METRICS_REFRESH_MINUTES: z.coerce.number().int().min(5).max(10_080).default(360),
     METADATA_REFRESH_MINUTES: z.coerce.number().int().min(5).max(10_080).default(1_440),
+    /** Indexation rule thresholds (PHASE-14). Provisional until OD-008 is decided. */
+    SEO_MIN_MEMBERS: z.coerce.number().int().min(0).max(1_000_000_000).default(1_000),
+    SEO_MIN_HISTORY_DAYS: z.coerce.number().int().min(0).max(365).default(7),
   },
   secrets: ['DATABASE_URL'],
 });

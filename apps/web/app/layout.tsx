@@ -2,14 +2,19 @@ import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { rankingsAvailable } from '../lib/api';
+import { siteOrigin } from '../lib/seo';
 import './globals.css';
 
-// Nothing is indexable until PHASE-14 defines indexation rules (OD-008).
-export const metadata: Metadata = {
-  title: { default: 'TG Analytics', template: '%s — TG Analytics' },
-  description: 'Analytics for public Telegram channels and groups, calculated from public data.',
-  robots: { index: false, follow: false },
-};
+// Default for every page is noindex (fail closed); pages opt in via pageMetadata() when the
+// master switch (seo.indexing) and their own rule allow it (PHASE-14, OD-008).
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    metadataBase: new URL(siteOrigin()),
+    title: { default: 'TG Analytics', template: '%s — TG Analytics' },
+    description: 'Analytics for public Telegram channels and groups, calculated from public data.',
+    robots: { index: false, follow: true },
+  };
+}
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
 
