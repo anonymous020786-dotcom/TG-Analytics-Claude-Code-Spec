@@ -20,6 +20,47 @@ datasource db {
   provider = "postgresql"
 }
 
+// ---------------------------------------------------------------- Accounts (PHASE-16, D-021)
+
+/// Platform user. Identity comes only from Sign in with Telegram (no email, no password).
+model User {
+  id               String        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Telegram user id from the verified login payload (not a channel id).
+  telegramUserId   BigInt        @unique @map("telegram_user_id")
+  firstName        String        @map("first_name")
+  lastName         String?       @map("last_name")
+  /// Lowercase Telegram username at last sign-in, if the user has one.
+  username         String?
+  /// active | disabled
+  status           String        @default("active")
+  lastLoginAt      DateTime?     @map("last_login_at") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sessions         UserSession[]
+
+  @@map("users")
+}
+
+/// Server-side session. Only the SHA-256 of the cookie token is stored (ADR-017).
+model UserSession {
+  id            String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique @map("token_hash")
+  /// Truncated User-Agent for the user's own session list; no IP address is stored.
+  userAgent     String?   @map("user_agent")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  /// Absolute lifetime; never extended.
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  /// Sliding inactivity limit; extended on use, never beyond expiresAt.
+  idleExpiresAt DateTime  @map("idle_expires_at") @db.Timestamptz(6)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("user_sessions")
+}
+
 // ---------------------------------------------------------------- Catalog
 
 model Channel {

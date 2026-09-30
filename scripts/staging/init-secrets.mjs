@@ -42,4 +42,6 @@ if (!existsSync(file('telegram_bot_token'))) {
   }
   write('telegram_bot_token', token.trim());
 }
+// CSRF HMAC secret for Sign in with Telegram (PHASE-16). Rotating only invalidates open forms.
+if (!existsSync(file('csrf_secret')) || rotate) write('csrf_secret', randomBytes(32).toString('base64url'));
 console.log('staging secrets ready (values not shown)');

@@ -89,6 +89,7 @@ if (searchOn) {
 } else {
   await check('search and browse are 404 while search.public is off', async () => {
     await missing('/search?q=tele');
+    await missing('/search'); // no query: must still be a real 404 (streamed metadata)
     await missing('/channels');
   });
 }

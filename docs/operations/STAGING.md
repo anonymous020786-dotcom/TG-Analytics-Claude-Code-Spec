@@ -48,6 +48,7 @@ $S worker-scheduler node workers/scheduler/dist/flags-cli.js set search.public o
 ```sh
 node scripts/staging/smoke.mjs http://127.0.0.1:8080 --channel telegram
 node scripts/e2e/public-routes.mjs http://127.0.0.1:8080 --channel telegram --rankings off --search on --seo off   # PHASE-13/14
+node scripts/e2e/auth-flow.mjs http://127.0.0.1:8080 --auth off   # PHASE-16 (use --auth on with auth.login on)
 ```
 
 If port 8080 is taken on the host, set `STAGING_HTTP_PORT` (e.g. `8088`) for both `up` and the smoke URL.
@@ -68,3 +69,9 @@ Also check:
 1. `node scripts/staging/init-secrets.mjs --rotate`
 2. Update the database role password to match: `ALTER ROLE tga PASSWORD ...`, via `psql` in the postgres container.
 3. `docker compose -f docker-compose.staging.yml up -d --force-recreate`
+
+## Sign in with Telegram (PHASE-16)
+
+- The API uses the dedicated staging bot as the login bot (`TELEGRAM_LOGIN_BOT_TOKEN_FILE` → `telegram_bot_token`; username `STAGING_LOGIN_BOT_USERNAME`). The CSRF secret comes from `staging/secrets/csrf_secret` (`init-secrets.mjs` creates it).
+- Flag `auth.login` is **off** in staging: the Telegram widget only renders on a domain registered with BotFather (`/setdomain`), which needs the public staging domain (OD-016).
+- `scripts/e2e/auth-flow.mjs --auth on` verifies the full flow through the edge by signing payloads with the staging bot token exactly as Telegram does. It uses a synthetic test user (Telegram id 999000001) and never prints the token.

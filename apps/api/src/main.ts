@@ -6,13 +6,17 @@ import {
   createDatabase,
   FeatureFlagRepository,
   PostgresAnalyticsStore,
+  AuditLogRepository,
   PostgresSearchIndex,
   RankingRepository,
+  SessionRepository,
+  UserRepository,
 } from '@tga/database';
 import { createLogger } from '@tga/logging';
 import { ChannelReader } from './channels/channel-reader';
 import { createApp } from './app';
 import { RankingsReader } from './rankings/rankings-reader';
+import { AuthService } from './auth/auth-service';
 import { SearchReader } from './search/search-reader';
 import { SeoReader } from './seo/seo-reader';
 import { StatsReader } from './stats/stats-reader';
@@ -55,9 +59,27 @@ async function bootstrap(): Promise<void> {
     intervals: { metricsMs: config.METRICS_REFRESH_MINUTES * 60_000, metadataMs: config.METADATA_REFRESH_MINUTES * 60_000 },
   });
   const searchReader = new SearchReader({ index: new PostgresSearchIndex(db), flags });
+  // Sign in with Telegram is registered only when fully configured (bot token, username, CSRF secret).
+  const authService =
+    config.TELEGRAM_LOGIN_BOT_TOKEN && config.TELEGRAM_LOGIN_BOT_USERNAME && config.CSRF_SECRET
+      ? new AuthService({
+          users: new UserRepository(db),
+          sessions: new SessionRepository(db),
+          audit: new AuditLogRepository(db),
+          flags,
+          botToken: config.TELEGRAM_LOGIN_BOT_TOKEN,
+          botUsername: config.TELEGRAM_LOGIN_BOT_USERNAME,
+          csrfSecret: config.CSRF_SECRET,
+          allowedOrigin: new URL(config.PUBLIC_SITE_URL).origin,
+          policy: { absoluteMs: config.SESSION_ABSOLUTE_DAYS * 86_400_000, idleMs: config.SESSION_IDLE_DAYS * 86_400_000 },
+          cookieSecure: config.COOKIE_SECURE,
+          log: (event, fields) => logger.warn(fields, event),
+        })
+      : undefined;
+  if (!authService) logger.info('sign in with Telegram disabled (TELEGRAM_LOGIN_BOT_TOKEN, TELEGRAM_LOGIN_BOT_USERNAME and CSRF_SECRET not all set)');
   const statsReader = new StatsReader({ channels, flags, store, anomalies });
   const rankingsReader = new RankingsReader({ rankings: new RankingRepository(db), channels, flags });
-  const app = await createApp({ logger: new NestLogger(logger), channelReader, searchReader, statsReader, rankingsReader, seoReader });
+  const app = await createApp({ logger: new NestLogger(logger), channelReader, searchReader, statsReader, rankingsReader, seoReader, ...(authService ? { authService } : {}) });
   await app.listen(config.PORT, '0.0.0.0');
   logger.info({ config: redactConfig(apiConfigSpec, config) }, 'api listening');
 }

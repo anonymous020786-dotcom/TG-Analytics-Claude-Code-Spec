@@ -36,7 +36,7 @@ MTProto account ownership, count and operational safety are open (OD-003).
 | Post/message metrics | Views, forwards, reactions, reply counts where publicly exposed | Collect as snapshots | Aggregate activity only (e.g. message volume per window) | Default (OD-004) |
 | Post/message content | Text, links, media | Store text + media metadata (type, size, link); media files are **not** copied | **Not stored** | Default (OD-004) |
 | Individual user identities | Sender IDs/usernames of group members, member lists, commenter identities | **Not collected** | **Not collected** | Default |
-| Platform user data | Account email, password hash, sessions, billing, API keys | Own users only, per SECURITY.md / API-SECURITY.md | — | Required by spec |
+| Platform user data | Telegram user ID, display name and username from Telegram sign-in (D-021; no phone number, no photo), sessions, billing, API keys | Own users only, per SECURITY.md / API-SECURITY.md | — | Required by spec |
 
 Rationale for group defaults: public group messages are authored by individuals, so storing them or their senders would amount to profiling individual users, a PRD non-goal. The owner may expand this via OD-004, and must record a lawful basis first.
 

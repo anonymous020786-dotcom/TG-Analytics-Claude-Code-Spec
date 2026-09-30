@@ -67,3 +67,19 @@ Metric definitions from the registry (FR-ANL-01): source, observation time, calc
 - `GET /api/v1/channels/:username` also returns `seo: { indexable }`: the master switch `seo.indexing` AND the indexation rule (ADR-016). Additive field; existing clients are unaffected.
 - `GET /api/v1/seo/settings` returns `{ indexing, policy: { minMembers, minHistoryDays, maxAgeHours } }`. `Cache-Control: public, max-age=60`.
 - `GET /api/v1/seo/channels?limit=1..5000&cursor=` returns `data: [{ username, lastModified }]` and `page: { nextCursor }`: channels indexable right now, keyset-paged, for the sitemap. It is empty while `seo.indexing` is off. Errors: `400 invalid_query`. `Cache-Control: public, max-age=600`.
+
+## Accounts and sessions (PHASE-16, implemented)
+
+Sign in with Telegram only (D-021, ADR-017). Routes exist when the login bot and CSRF secret are configured, and answer only while flag `auth.login` is on (otherwise 404). All responses: `Cache-Control: no-store`.
+
+State-changing requests (`POST`) must send `Content-Type: application/json`, an `Origin` equal to the public site, and `X-CSRF-Token` from `GET /session`. Otherwise they get `415 unsupported_media_type`, `403 origin_not_allowed` or `403 csrf_failed`.
+
+| Method and path | Purpose | Response |
+|---|---|---|
+| `GET /api/v1/auth/session` | Browser bootstrap | `{ authenticated, user, csrfToken, loginBot: { username } }`; sets the `__Host-tga_pre` nonce cookie before sign-in |
+| `GET /api/v1/auth/me` | Read-only session check (web server) | `{ authenticated, user }` |
+| `POST /api/v1/auth/telegram` | Sign in with the Telegram Login Widget payload (as received) | `200 { user, created, csrfToken }` and sets `__Host-tga_session`; `401 invalid_login` (any verification failure); `403 account_disabled` |
+| `POST /api/v1/auth/logout` | End this session | `200 { revoked: 1 }`, clears the cookie; `401 not_authenticated` |
+| `POST /api/v1/auth/logout-all` | End every session of the user | `200 { revoked: n }`, clears the cookie |
+
+`user` = `{ id, firstName, lastName, username }`.

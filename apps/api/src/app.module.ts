@@ -1,4 +1,6 @@
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
+import { AUTH_SERVICE, AuthController } from './auth/auth.controller';
+import type { AuthService } from './auth/auth-service';
 import type { ChannelReader } from './channels/channel-reader';
 import { CHANNEL_READER, ChannelsController } from './channels/channels.controller';
 import { HealthController } from './health/health.controller';
@@ -15,6 +17,7 @@ export interface AppReaders {
   statsReader?: StatsReader;
   rankingsReader?: RankingsReader;
   seoReader?: SeoReader;
+  authService?: AuthService;
 }
 
 @Module({})
@@ -39,6 +42,10 @@ export class AppModule {
     if (options.seoReader) {
       controllers.push(SeoController);
       providers.push({ provide: SEO_READER, useValue: options.seoReader });
+    }
+    if (options.authService) {
+      controllers.push(AuthController);
+      providers.push({ provide: AUTH_SERVICE, useValue: options.authService });
     }
     if (options.channelReader) {
       controllers.push(ChannelsController);

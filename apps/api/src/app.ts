@@ -13,6 +13,8 @@ export async function createApp(options: CreateAppOptions | LoggerService | fals
   const { logger, ...readers } = opts;
   const app = await NestFactory.create<NestExpressApplication>(AppModule.register(readers), { logger: logger ?? false });
   app.disable('x-powered-by');
+  // Small JSON bodies only (the largest legitimate body is a Telegram login payload).
+  app.useBodyParser('json', { limit: '16kb' });
   app.use(requestId);
   app.enableShutdownHooks();
   return app;
