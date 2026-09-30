@@ -9,7 +9,7 @@ import { ChannelList } from './ChannelList';
 export const loadRankings = cache(fetchRankings);
 export const loadRanking = cache((key: string, cursor: string | undefined) => fetchRanking(key, cursor));
 
-/** For generateMetadata: rankings disabled (OD-015 pending) or unknown → real 404 before streaming. */
+/** For generateMetadata: rankings disabled (flag rankings.public off) or unknown → real 404 before streaming. */
 export async function requireRankings(): Promise<RankingSummary[]> {
   const r = await loadRankings();
   if (r.kind !== 'ok') notFound();

@@ -12,4 +12,4 @@ Every ranking declares metric, observation window, eligible population, freshnes
 
 - Runs are immutable and stored per `asOf` window. At most 1,000 entries are kept per run.
 - Every ranking shows the disclaimer "Calculated by TG Analytics from public data; not an official Telegram ranking."
-- The eligibility base, freshness window and entry limit are proposals pending **OD-015**. Changing any of them creates a new version.
+- The eligibility base, freshness window and entry limit were approved as **D-019** (2026-09-30). Changing any of them creates a new version.

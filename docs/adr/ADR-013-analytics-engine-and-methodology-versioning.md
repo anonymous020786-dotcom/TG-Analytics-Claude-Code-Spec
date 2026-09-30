@@ -27,5 +27,5 @@ PHASE-11 requires pure calculators, methodology versioning and edge-case tests. 
 ## Consequences
 
 - Historical rankings stay reproducible and auditable by version.
-- The ranking and trending parameters (eligibility base 1,000, freshness 1 day, trending weights 0.7/0.3) are proposals until owner approval (OD-015). Approving different values creates new versions.
+- The ranking and trending parameters (eligibility base 1,000, freshness 1 day, trending weights 0.7/0.3) were approved by the owner as D-019 (was OD-015). Approving different values creates new versions.
 - Rankings are computed in memory over the eligible population. PHASE-33 measures when that needs streaming or SQL-side ranking.

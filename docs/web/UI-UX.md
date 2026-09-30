@@ -41,4 +41,4 @@ A route-level `loading.tsx` makes Next.js start streaming a `200` response befor
   - skeletons announce once;
   - list-style links have targets of at least 24 px (2.5.8);
   - autocomplete announces the suggestion count politely.
-- **Target:** WCAG 2.2 AA (provisional until OD-005 sets the level).
+- **Target:** WCAG 2.2 AA (D-020).

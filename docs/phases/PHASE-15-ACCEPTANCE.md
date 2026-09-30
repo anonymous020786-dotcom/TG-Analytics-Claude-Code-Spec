@@ -1,6 +1,6 @@
 # Phase 15 Acceptance Matrix — UI System
 
-Verified on 2026-09-30: unit tests, full CI, staging E2E, and a headless Chrome audit of real staging pages. Accessibility target: WCAG 2.2 AA (provisional until OD-005 sets the level).
+Verified on 2026-09-30: unit tests, full CI, staging E2E, and a headless Chrome audit of real staging pages. Accessibility target: WCAG 2.2 AA (D-020).
 
 | Area | Required | Evidence |
 |---|---|---|
@@ -18,4 +18,4 @@ Verified on 2026-09-30: unit tests, full CI, staging E2E, and a headless Chrome 
 | Motion and forced colors | Respect user settings | `prefers-reduced-motion` stops skeleton animation; `forced-colors` keeps borders and current-tab indication |
 | Tests | Suites pass | `pnpm run ci` green: 490 tests (+44 in `@tga/ui`: 32 contrast, 12 component); staging E2E 15/15; smoke 8/8 |
 | Findings | During the phase | (1) Control-border contrast failure (fixed). (2) Breadcrumb target size (fixed). (3) The boundary checker rejected `fs` in a pure library's test, so the test uses a `?raw` import instead of an exemption. (4) Redeploys show about 10 s of 502s while the proxy's DNS cache (`valid=10s`) catches up. Single-instance staging has a restart gap anyway; zero-downtime deploys are a production-phase item |
-| Deferred | Out of scope | WCAG level decision (OD-005); visual polish beyond tokens (no brand assets yet); authenticated dashboard components (PHASE-16+) |
+| Deferred | Out of scope | Visual polish beyond tokens (no brand assets yet); authenticated dashboard components (PHASE-16+) |

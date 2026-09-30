@@ -50,7 +50,7 @@ Response `data`: `{ channelId, metric: 'members', days, from, to, points: [{ dat
 
 ### `GET /api/v1/rankings`, `GET /api/v1/rankings/:key`, `GET /api/v1/trending`
 
-Behind flag `rankings.public`, which is **off until OD-015 is approved** (first public display). While off, all three return 404.
+Behind flag `rankings.public` (parameters approved as D-019; the flag is an operational switch). While off, all three return 404.
 
 - `GET /rankings` lists every ranking: `key`, `label`, `metric`, `window`, `methodologyVersion`, `eligibility`, `tieBreak`, `disclaimer`, and `latestRun` (`asOf`, `computedAt`, `eligibleCount`, `entryCount`, or `null` before the first run).
 - `GET /rankings/:key` (`top-subscribers`, `fastest-growing-7d`, `trending`) returns the latest immutable run: `data: { ranking, entries: [{ position, score, channel: { id, username, title, type, members } }] }` with `page: { nextCursor, limit }` (`limit` 1–100, default 20). Entities hidden or deactivated after the run are skipped, so a position can be missing. Before the first run, `entries` is empty (200).

@@ -1,5 +1,5 @@
 /* @tga/ui design tokens and primitives (PHASE-15).
-   Target: WCAG 2.2 AA (provisional, OD-005). Every text/surface and control/surface pair
+   Target: WCAG 2.2 AA (D-020). Every text/surface and control/surface pair
    below is checked by src/contrast.test.ts, which parses this file. Dark mode is its own
    selected set of steps, not an inversion. Status colors are reserved for state and always
    ship with an icon and a text label. */
