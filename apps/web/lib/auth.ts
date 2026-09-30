@@ -10,7 +10,7 @@ export interface SessionUser {
 }
 
 /** `disabled`: sign-in is off (flag auth.login or not configured). */
-export type MeResult = { kind: 'disabled' } | { kind: 'anonymous' } | { kind: 'user'; user: SessionUser };
+export type MeResult = { kind: 'disabled' } | { kind: 'anonymous' } | { kind: 'user'; user: SessionUser; roles: string[] };
 
 const SESSION_COOKIES = ['__Host-tga_session', 'tga_session'] as const;
 
@@ -39,8 +39,8 @@ export const currentUser = cache(async (): Promise<MeResult> => {
     });
     if (res.status === 404) return { kind: 'disabled' };
     if (!res.ok) return { kind: 'anonymous' };
-    const body = (await res.json()) as { data: { authenticated: boolean; user: SessionUser | null } };
-    return body.data.authenticated && body.data.user ? { kind: 'user', user: body.data.user } : { kind: 'anonymous' };
+    const body = (await res.json()) as { data: { authenticated: boolean; user: SessionUser | null; roles?: string[] } };
+    return body.data.authenticated && body.data.user ? { kind: 'user', user: body.data.user, roles: body.data.roles ?? [] } : { kind: 'anonymous' };
   } catch {
     return { kind: 'anonymous' };
   }

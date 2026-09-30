@@ -9,6 +9,7 @@ import {
   AuditLogRepository,
   PostgresSearchIndex,
   RankingRepository,
+  RoleRepository,
   SessionRepository,
   UserRepository,
 } from '@tga/database';
@@ -17,6 +18,7 @@ import { ChannelReader } from './channels/channel-reader';
 import { createApp } from './app';
 import { RankingsReader } from './rankings/rankings-reader';
 import { AuthService } from './auth/auth-service';
+import { assertCatalog } from './authz/permissions';
 import { SearchReader } from './search/search-reader';
 import { SeoReader } from './seo/seo-reader';
 import { StatsReader } from './stats/stats-reader';
@@ -60,6 +62,7 @@ async function bootstrap(): Promise<void> {
   });
   const searchReader = new SearchReader({ index: new PostgresSearchIndex(db), flags });
   // Sign in with Telegram is registered only when fully configured (bot token, username, CSRF secret).
+  const roles = new RoleRepository(db);
   const authService =
     config.TELEGRAM_LOGIN_BOT_TOKEN && config.TELEGRAM_LOGIN_BOT_USERNAME && config.CSRF_SECRET
       ? new AuthService({
@@ -67,6 +70,7 @@ async function bootstrap(): Promise<void> {
           sessions: new SessionRepository(db),
           audit: new AuditLogRepository(db),
           flags,
+          roles,
           botToken: config.TELEGRAM_LOGIN_BOT_TOKEN,
           botUsername: config.TELEGRAM_LOGIN_BOT_USERNAME,
           csrfSecret: config.CSRF_SECRET,
@@ -77,9 +81,17 @@ async function bootstrap(): Promise<void> {
         })
       : undefined;
   if (!authService) logger.info('sign in with Telegram disabled (TELEGRAM_LOGIN_BOT_TOKEN, TELEGRAM_LOGIN_BOT_USERNAME and CSRF_SECRET not all set)');
+  // Authorization (PHASE-17): the code's permission catalog must exist in the database.
+  if (authService) await assertCatalog(() => roles.permissionKeys());
+  const authz = authService
+    ? {
+        guard: { auth: authService, roles, log: (event: string, fields: Record<string, unknown>) => logger.warn(fields, event) },
+        deps: { users: new UserRepository(db), sessions: new SessionRepository(db), roles, audit: new AuditLogRepository(db) },
+      }
+    : undefined;
   const statsReader = new StatsReader({ channels, flags, store, anomalies });
   const rankingsReader = new RankingsReader({ rankings: new RankingRepository(db), channels, flags });
-  const app = await createApp({ logger: new NestLogger(logger), channelReader, searchReader, statsReader, rankingsReader, seoReader, ...(authService ? { authService } : {}) });
+  const app = await createApp({ logger: new NestLogger(logger), channelReader, searchReader, statsReader, rankingsReader, seoReader, ...(authService && authz ? { authService, authz } : authService ? { authService } : {}) });
   await app.listen(config.PORT, '0.0.0.0');
   logger.info({ config: redactConfig(apiConfigSpec, config) }, 'api listening');
 }
